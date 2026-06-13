@@ -26,4 +26,9 @@ describe("parseRecognition", () => {
     const raw = "```json\n{\"items\":[{\"name\":\"牛奶\",\"category\":\"乳製品\"}]}\n```";
     expect(parseRecognition(raw)).toEqual([{ name: "牛奶", category: "乳製品", confidence: 0 }]);
   });
+
+  it("clamps unknown category to 其他", () => {
+    const raw = JSON.stringify({ items: [{ name: "泡麵", category: "零食", confidence: 0.5 }] });
+    expect(parseRecognition(raw)).toEqual([{ name: "泡麵", category: "其他", confidence: 0.5 }]);
+  });
 });
