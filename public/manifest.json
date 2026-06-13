@@ -1,0 +1,9 @@
+{
+  "name": "冰箱食物追蹤",
+  "short_name": "冰箱追蹤",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#06C755",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

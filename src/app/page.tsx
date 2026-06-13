@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
 import { db } from "@/lib/db";
 import { FoodList } from "@/components/FoodList";
+import { EnablePush } from "@/components/EnablePush";
 
 export default async function Home() {
   const user = await getCurrentUser();
@@ -16,6 +17,7 @@ export default async function Home() {
           ＋ 新增
         </Link>
       </div>
+      <EnablePush vapidPublicKey={process.env.VAPID_PUBLIC_KEY ?? ""} />
       <FoodList leadDays={hh?.reminderLeadDays ?? 2} />
     </main>
   );
