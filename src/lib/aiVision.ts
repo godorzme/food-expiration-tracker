@@ -18,6 +18,7 @@ export async function recognizeFood(bytes: Uint8Array, contentType: string): Pro
           { type: "image_url", image_url: { url: dataUrl } },
         ]}],
         temperature: 0,
+        max_tokens: 512,
       }),
       signal: AbortSignal.timeout(20000),
     });
