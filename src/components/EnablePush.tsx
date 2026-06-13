@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function urlBase64ToUint8Array(base64: string) {
   const padding = "=".repeat((4 - (base64.length % 4)) % 4);
@@ -11,6 +11,19 @@ function urlBase64ToUint8Array(base64: string) {
 export function EnablePush({ vapidPublicKey }: { vapidPublicKey: string }) {
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Reflect an already-active subscription so the label isn't stuck on "開啟" after opting in.
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    navigator.serviceWorker
+      .getRegistration()
+      .then(async (reg) => {
+        const sub = await reg?.pushManager.getSubscription();
+        if (sub) setDone(true);
+      })
+      .catch(() => {});
+  }, []);
+
   async function enable() {
     setError(null);
     try {
