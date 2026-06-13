@@ -13,7 +13,9 @@ function configure() {
 }
 
 export async function pushWeb(userId: string, payload: { title: string; body: string }): Promise<boolean> {
-  if (!process.env.VAPID_PRIVATE_KEY) return false;
+  // Require all three VAPID vars: setVapidDetails throws on a missing subject/public
+  // key, and that call sits outside the per-subscription try/catch below.
+  if (!process.env.VAPID_PRIVATE_KEY || !process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_SUBJECT) return false;
   configure();
   const subs = await db.pushSubscription.findMany({ where: { userId } });
   let anyOk = false;
