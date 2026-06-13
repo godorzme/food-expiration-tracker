@@ -22,9 +22,24 @@ export async function POST(req: NextRequest) {
   // body.items: [{ name, category, storedAt, expiresAt|null, photoId|null, notes?, isRecognized? }]
   if (!Array.isArray(body?.items) || body.items.length === 0)
     return Response.json({ error: "no items" }, { status: 400 });
+
+  // Validate each item up front so a bad/missing storedAt or name can't write a
+  // garbage row or blow up mid-transaction with a cryptic 500.
+  const items = body.items as Array<Record<string, unknown>>;
+  for (const it of items) {
+    if (typeof it.name !== "string" || !it.name.trim())
+      return Response.json({ error: "item name required" }, { status: 400 });
+    if (typeof it.category !== "string" || !it.category.trim())
+      return Response.json({ error: "item category required" }, { status: 400 });
+    if (!it.storedAt || Number.isNaN(new Date(it.storedAt as string).getTime()))
+      return Response.json({ error: "invalid storedAt" }, { status: 400 });
+    if (it.expiresAt && Number.isNaN(new Date(it.expiresAt as string).getTime()))
+      return Response.json({ error: "invalid expiresAt" }, { status: 400 });
+  }
+
   const shelf = await loadShelfLife();
   const created = await db.$transaction(
-    (body.items as Array<Record<string, unknown>>).map((it) => {
+    items.map((it) => {
       const storedAt = new Date(it.storedAt as string);
       const expiresAt = resolveExpiresAt(
         {
