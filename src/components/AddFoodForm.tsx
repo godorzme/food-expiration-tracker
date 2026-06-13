@@ -1,12 +1,11 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { CATEGORIES } from "@/lib/recognition";
 
-const CATEGORIES = ["熟食","葉菜","根莖蔬菜","水果","肉類","海鮮","乳製品","蛋","醬料","飲料","剩菜","其他"];
+interface Row { id: string; name: string; category: string; expiresAt: string; fromAI: boolean }
 
-interface Row { id: string; name: string; category: string; expiresAt: string; }
-
-const blankRow = (): Row => ({ id: crypto.randomUUID(), name: "", category: "其他", expiresAt: "" });
+const blankRow = (): Row => ({ id: crypto.randomUUID(), name: "", category: "其他", expiresAt: "", fromAI: false });
 
 interface PhotoResponse {
   photoId: string;
@@ -35,7 +34,7 @@ export function AddFoodForm() {
       setStoredAt(data.capturedAt.slice(0, 16));
       const recognized = data.recognized ?? [];
       setRows(recognized.length
-        ? recognized.map((r) => ({ id: crypto.randomUUID(), name: r.name, category: r.category, expiresAt: "" }))
+        ? recognized.map((r) => ({ id: crypto.randomUUID(), name: r.name, category: r.category, expiresAt: "", fromAI: true }))
         : [blankRow()]);
     } catch {
       // upload/recognition failed — still allow manual entry with one blank row
@@ -57,7 +56,7 @@ export function AddFoodForm() {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({ items: rows.filter((r) => r.name.trim()).map((r) => ({
           name: r.name, category: r.category, photoId, storedAt: stored,
-          expiresAt: r.expiresAt ? new Date(r.expiresAt).toISOString() : null, isRecognized: true,
+          expiresAt: r.expiresAt ? new Date(r.expiresAt).toISOString() : null, isRecognized: r.fromAI,
         })) }),
       });
       if (!res.ok) throw new Error(`status ${res.status}`);
