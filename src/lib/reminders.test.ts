@@ -16,6 +16,9 @@ describe("isDue", () => {
   it("not due when no expiry", () => {
     expect(isDue(null, now, 2)).toBe(false);
   });
+  it("due when expiresAt exactly at the threshold", () => {
+    expect(isDue(new Date("2026-06-15T09:00:00Z"), now, 2)).toBe(true);
+  });
 });
 
 describe("toDateOnly", () => {
