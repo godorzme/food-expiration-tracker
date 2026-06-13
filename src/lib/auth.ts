@@ -27,6 +27,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
         token.uid = user.id;
         token.householdId = user.householdId;
+        token.lineUserId = profile.sub as string;
       }
       return token;
     },
@@ -34,7 +35,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.uid) {
         session.user.id = token.uid;
         session.user.householdId = token.householdId ?? "";
-        session.user.lineUserId = token.sub ?? "";
+        session.user.lineUserId = token.lineUserId ?? "";
       }
       return session;
     },

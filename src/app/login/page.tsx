@@ -11,7 +11,7 @@ export default function LoginPage() {
           await signIn("line", { redirectTo: "/" });
         }}
       >
-        <button className="rounded-lg bg-[#06C755] px-6 py-3 font-semibold text-white">
+        <button type="submit" className="rounded-lg bg-[#06C755] px-6 py-3 font-semibold text-white">
           使用 LINE 登入
         </button>
       </form>

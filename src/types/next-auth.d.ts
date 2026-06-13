@@ -14,5 +14,6 @@ declare module "@auth/core/jwt" {
   interface JWT {
     uid?: string;
     householdId?: string;
+    lineUserId?: string;
   }
 }

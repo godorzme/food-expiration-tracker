@@ -10,7 +10,7 @@ export interface CurrentUser {
 export async function getCurrentUser(): Promise<CurrentUser | null> {
   const session = await auth();
   const u = session?.user;
-  if (!u?.id) return null;
+  if (!u?.id || !u.householdId) return null;
   return {
     id: u.id,
     householdId: u.householdId,
