@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Household {
+  id               String     @id @default(cuid())
+  name             String
+  reminderLeadDays Int        @default(2)
+  createdAt        DateTime   @default(now())
+  users            User[]
+  locations        Location[]
+  foodItems        FoodItem[]
+}
+
+model User {
+  id          String             @id @default(cuid())
+  lineUserId  String             @unique
+  displayName String
+  pictureUrl  String?
+  household   Household          @relation(fields: [householdId], references: [id])
+  householdId String
+  pushSubs    PushSubscription[]
+  createdAt   DateTime           @default(now())
+}
+
+model Location {
+  id          String     @id @default(cuid())
+  household   Household  @relation(fields: [householdId], references: [id])
+  householdId String
+  name        String
+  foodItems   FoodItem[]
+}
+
+model Photo {
+  id         String     @id @default(cuid())
+  objectKey  String
+  capturedAt DateTime
+  uploadedBy String
+  createdAt  DateTime   @default(now())
+  foodItems  FoodItem[]
+}
+
+enum FoodStatus {
+  active
+  consumed
+  discarded
+  expired
+}
+
+model FoodItem {
+  id           String        @id @default(cuid())
+  household    Household     @relation(fields: [householdId], references: [id])
+  householdId  String
+  photo        Photo?        @relation(fields: [photoId], references: [id])
+  photoId      String?
+  location     Location?     @relation(fields: [locationId], references: [id])
+  locationId   String?
+  name         String
+  category     String
+  storedAt     DateTime
+  expiresAt    DateTime?
+  status       FoodStatus    @default(active)
+  createdBy    String
+  notes        String?
+  isRecognized Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  reminders    ReminderLog[]
+}
+
+model ShelfLife {
+  category    String @id
+  defaultDays Int
+}
+
+model PushSubscription {
+  id       String @id @default(cuid())
+  user     User   @relation(fields: [userId], references: [id])
+  userId   String
+  endpoint String @unique
+  p256dh   String
+  auth     String
+}
+
+model ReminderLog {
+  id         String   @id @default(cuid())
+  foodItem   FoodItem @relation(fields: [foodItemId], references: [id])
+  foodItemId String
+  remindedOn DateTime @db.Date
+  channel    String
+
+  @@unique([foodItemId, remindedOn, channel])
+}
