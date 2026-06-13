@@ -4,7 +4,9 @@ import { useRouter } from "next/navigation";
 
 const CATEGORIES = ["熟食","葉菜","根莖蔬菜","水果","肉類","海鮮","乳製品","蛋","醬料","飲料","剩菜","其他"];
 
-interface Row { name: string; category: string; expiresAt: string; }
+interface Row { id: string; name: string; category: string; expiresAt: string; }
+
+const blankRow = (): Row => ({ id: crypto.randomUUID(), name: "", category: "其他", expiresAt: "" });
 
 interface PhotoResponse {
   photoId: string;
@@ -33,19 +35,19 @@ export function AddFoodForm() {
       setStoredAt(data.capturedAt.slice(0, 16));
       const recognized = data.recognized ?? [];
       setRows(recognized.length
-        ? recognized.map((r) => ({ name: r.name, category: r.category, expiresAt: "" }))
-        : [{ name: "", category: "其他", expiresAt: "" }]);
+        ? recognized.map((r) => ({ id: crypto.randomUUID(), name: r.name, category: r.category, expiresAt: "" }))
+        : [blankRow()]);
     } catch {
       // upload/recognition failed — still allow manual entry with one blank row
-      setRows([{ name: "", category: "其他", expiresAt: "" }]);
+      setRows([blankRow()]);
     } finally {
       setBusy(false); setRecognizing(false);
     }
   }
 
-  function update(i: number, patch: Partial<Row>) { setRows((rs) => rs.map((r, j) => j === i ? { ...r, ...patch } : r)); }
-  function addRow() { setRows((rs) => [...rs, { name: "", category: "其他", expiresAt: "" }]); }
-  function removeRow(i: number) { setRows((rs) => rs.filter((_, j) => j !== i)); }
+  function update(id: string, patch: Partial<Row>) { setRows((rs) => rs.map((r) => r.id === id ? { ...r, ...patch } : r)); }
+  function addRow() { setRows((rs) => [...rs, blankRow()]); }
+  function removeRow(id: string) { setRows((rs) => rs.filter((r) => r.id !== id)); }
 
   async function save() {
     setBusy(true);
@@ -75,15 +77,16 @@ export function AddFoodForm() {
         <>
           <label className="text-sm text-gray-500">放入時間（預設＝拍照時間）</label>
           <input className="rounded border p-2" type="datetime-local" value={storedAt} onChange={(e) => setStoredAt(e.target.value)} />
-          {rows.map((r, i) => (
-            <div key={i} className="rounded border p-3 flex flex-col gap-2">
-              <input className="rounded border p-2" placeholder="名稱" value={r.name} onChange={(e) => update(i, { name: e.target.value })} />
-              <select className="rounded border p-2" value={r.category} onChange={(e) => update(i, { category: e.target.value })}>
+          {rows.map((r) => (
+            <div key={r.id} className="rounded border p-3 flex flex-col gap-2">
+              <input className="rounded border p-2" placeholder="名稱" value={r.name} onChange={(e) => update(r.id, { name: e.target.value })} />
+              <select className="rounded border p-2" value={r.category} onChange={(e) => update(r.id, { category: e.target.value })}>
                 {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
               </select>
+              <label className="text-xs text-gray-500">到期日（留空＝依類別自動估）</label>
               <input className="rounded border p-2" type="date" value={r.expiresAt}
-                onChange={(e) => update(i, { expiresAt: e.target.value })} placeholder="到期日（留空＝自動估）" />
-              <button className="self-end text-sm text-red-600" onClick={() => removeRow(i)}>刪除這筆</button>
+                onChange={(e) => update(r.id, { expiresAt: e.target.value })} />
+              <button className="self-end text-sm text-red-600" onClick={() => removeRow(r.id)}>刪除這筆</button>
             </div>
           ))}
           <button className="rounded border p-2" onClick={addRow}>＋ 再加一筆</button>
