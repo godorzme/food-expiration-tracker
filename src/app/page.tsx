@@ -1,13 +1,22 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
+import { db } from "@/lib/db";
+import { FoodList } from "@/components/FoodList";
 
 export default async function Home() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  const hh = await db.household.findUnique({ where: { id: user.householdId } });
   return (
-    <main className="p-6">
-      <h1 className="text-xl font-bold">嗨 {user.name || "訪客"}</h1>
-      <p className="text-gray-500">清單即將在 M2 完成。</p>
+    <main className="mx-auto max-w-md p-4">
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-xl font-bold">冰箱清單</h1>
+        <Link href="/add" className="rounded bg-black px-3 py-1 text-white">
+          ＋ 新增
+        </Link>
+      </div>
+      <FoodList leadDays={hh?.reminderLeadDays ?? 2} />
     </main>
   );
 }
