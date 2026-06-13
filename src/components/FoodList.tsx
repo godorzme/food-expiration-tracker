@@ -20,22 +20,49 @@ interface FoodItemDTO {
 
 export function FoodList({ leadDays }: { leadDays: number }) {
   const [items, setItems] = useState<FoodItemDTO[]>([]);
-  const now = new Date();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const now = useState(() => new Date())[0];
+
   async function load() {
-    setItems((await (await fetch("/api/food")).json()).items);
+    setError(false);
+    try {
+      const res = await fetch("/api/food");
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      const data: { items?: FoodItemDTO[] } = await res.json();
+      setItems(data.items ?? []);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
   }
   useEffect(() => {
     load();
   }, []);
 
   async function mark(id: string, status: string) {
-    await fetch(`/api/food/${id}`, {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    load();
+    try {
+      const res = await fetch(`/api/food/${id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      await load();
+    } catch {
+      setError(true);
+    }
   }
+
+  if (loading) return <p className="text-sm text-gray-500">載入中…</p>;
+  if (error)
+    return (
+      <div className="text-sm text-red-600">
+        載入失敗。<button className="underline" onClick={() => load()}>重試</button>
+      </div>
+    );
+  if (items.length === 0) return <p className="text-sm text-gray-500">冰箱是空的,點「＋ 新增」記錄第一樣食物。</p>;
 
   return (
     <ul className="flex flex-col gap-2">
