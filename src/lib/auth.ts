@@ -14,21 +14,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async signIn({ profile }) {
-      if (!profile?.sub) return false;
-      await ensureUserAndHousehold(db, {
-        lineUserId: profile.sub as string,
-        displayName: (profile.name as string) ?? "User",
-        pictureUrl: (profile.picture as string) ?? null,
-      });
-      return true;
+      return !!profile?.sub;
+    },
+    async jwt({ token, profile }) {
+      // `profile` is present only on the initial sign-in; do DB work once here
+      // instead of on every request in the session callback.
+      if (profile?.sub) {
+        const user = await ensureUserAndHousehold(db, {
+          lineUserId: profile.sub as string,
+          displayName: (profile.name as string) ?? "User",
+          pictureUrl: (profile.picture as string) ?? null,
+        });
+        token.uid = user.id;
+        token.householdId = user.householdId;
+      }
+      return token;
     },
     async session({ session, token }) {
-      const lineUserId = token.sub!;
-      const user = await db.user.findUnique({ where: { lineUserId } });
-      if (user) {
-        (session as any).user.id = user.id;
-        (session as any).user.householdId = user.householdId;
-        (session as any).user.lineUserId = user.lineUserId;
+      if (token.uid) {
+        session.user.id = token.uid;
+        session.user.householdId = token.householdId ?? "";
+        session.user.lineUserId = token.sub ?? "";
       }
       return session;
     },

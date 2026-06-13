@@ -35,4 +35,24 @@ describe("ensureUserAndHousehold", () => {
     expect(db.household.create).not.toHaveBeenCalled();
     expect(user.householdId).toBe("h9");
   });
+
+  it("handles first-login race: returns existing user when user.create throws P2002", async () => {
+    const existingUser = { id: "u2", lineUserId: "L2", householdId: "h2" };
+    // findUnique returns null on first call (before create), then the existing user on second call
+    const findUnique = vi.fn()
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(existingUser);
+    const create = vi.fn().mockRejectedValueOnce({ code: "P2002" });
+    const db = {
+      user: { findUnique, create },
+      household: { create: vi.fn(async ({ data }: any) => ({ id: "h2", ...data })) },
+    } as any;
+
+    const user = await ensureUserAndHousehold(db, {
+      lineUserId: "L2", displayName: "Alice", pictureUrl: null,
+    });
+    expect(user).toBe(existingUser);
+    expect(create).toHaveBeenCalledOnce();
+    expect(findUnique).toHaveBeenCalledTimes(2);
+  });
 });
