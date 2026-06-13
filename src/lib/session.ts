@@ -1,4 +1,5 @@
-import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { ensureUserAndHousehold } from "@/lib/household";
 
 export interface CurrentUser {
   id: string;
@@ -7,14 +8,16 @@ export interface CurrentUser {
   name: string;
 }
 
-export async function getCurrentUser(): Promise<CurrentUser | null> {
-  const session = await auth();
-  const u = session?.user;
-  if (!u?.id || !u.householdId) return null;
+// Login is disabled for now — everyone who opens the app shares a single local
+// household/user. Kept as a get-or-create so re-adding real auth later is a small change.
+const LOCAL_PROFILE = { lineUserId: "local-default", displayName: "我", pictureUrl: null };
+
+export async function getCurrentUser(): Promise<CurrentUser> {
+  const user = await ensureUserAndHousehold(db, LOCAL_PROFILE);
   return {
-    id: u.id,
-    householdId: u.householdId,
-    lineUserId: u.lineUserId,
-    name: u.name ?? "",
+    id: user.id,
+    householdId: user.householdId,
+    lineUserId: user.lineUserId,
+    name: user.displayName,
   };
 }

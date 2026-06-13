@@ -1,13 +1,14 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
 import { db } from "@/lib/db";
 import { FoodList } from "@/components/FoodList";
 import { EnablePush } from "@/components/EnablePush";
 
+// Reads the household from the DB per request — never prerender at build time.
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
   const hh = await db.household.findUnique({ where: { id: user.householdId } });
   return (
     <main className="mx-auto max-w-md p-4">
