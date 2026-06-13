@@ -21,7 +21,8 @@ export async function POST(req: NextRequest) {
   const uploadTime = new Date();
   const capturedAt = await resolveCapturedAt(bytes, uploadTime);
 
-  const key = `${user.householdId}/${uploadTime.getTime()}-${sanitizeFilename(file.name)}`;
+  const safeName = sanitizeFilename(file.name) || "upload";
+  const key = `${user.householdId}/${uploadTime.getTime()}-${safeName}`;
   await putPhoto(key, bytes, file.type || "image/jpeg");
 
   const photo = await db.photo.create({
