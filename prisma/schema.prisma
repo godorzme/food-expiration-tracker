@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // url is provided at runtime via the driver adapter / prisma.config.ts
 }
 
 model Household {
