@@ -1,31 +1,30 @@
-import { describe, it, expect, afterEach } from "vitest";
-import { getPhotoUrl } from "./storage";
+import { describe, it, expect, vi } from "vitest";
 
-const ENV = { ...process.env };
-afterEach(() => { process.env = { ...ENV }; });
+const sendMock = vi.fn();
+vi.mock("@aws-sdk/client-s3", () => ({
+  S3Client: vi.fn(function () { return { send: sendMock }; }),
+  PutObjectCommand: vi.fn(function (x: unknown) { return x; }),
+  GetObjectCommand: vi.fn(function (x: unknown) { return x; }),
+}));
 
-describe("getPhotoUrl", () => {
-  it("signs against S3_PUBLIC_ENDPOINT when set", async () => {
-    process.env.S3_PUBLIC_ENDPOINT = "https://photos.example.com";
-    process.env.S3_ENDPOINT = "http://minio.internal:9000";
-    process.env.S3_ACCESS_KEY = "k";
-    process.env.S3_SECRET_KEY = "s";
-    process.env.S3_BUCKET = "zeabur";
-    process.env.S3_FORCE_PATH_STYLE = "true";
-    const url = await getPhotoUrl("hh1/abc.jpg");
-    expect(url.startsWith("https://photos.example.com")).toBe(true);
-    expect(url).toContain("zeabur");
-    expect(url).toContain("X-Amz-Signature");
+import { getPhotoBytes } from "./storage";
+
+describe("getPhotoBytes", () => {
+  it("returns body bytes + content type from the object", async () => {
+    sendMock.mockResolvedValueOnce({
+      ContentType: "image/png",
+      Body: { transformToByteArray: async () => new Uint8Array([1, 2, 3]) },
+    });
+    const res = await getPhotoBytes("k.png");
+    expect(res.contentType).toBe("image/png");
+    expect(Array.from(res.body)).toEqual([1, 2, 3]);
   });
 
-  it("falls back to S3_ENDPOINT when no public endpoint set", async () => {
-    delete process.env.S3_PUBLIC_ENDPOINT;
-    process.env.S3_ENDPOINT = "http://minio.internal:9000";
-    process.env.S3_ACCESS_KEY = "k";
-    process.env.S3_SECRET_KEY = "s";
-    process.env.S3_BUCKET = "zeabur";
-    process.env.S3_FORCE_PATH_STYLE = "true";
-    const url = await getPhotoUrl("abc.jpg");
-    expect(url).toContain("minio.internal:9000");
+  it("defaults content type to image/jpeg when missing", async () => {
+    sendMock.mockResolvedValueOnce({
+      Body: { transformToByteArray: async () => new Uint8Array([9]) },
+    });
+    const res = await getPhotoBytes("k");
+    expect(res.contentType).toBe("image/jpeg");
   });
 });
