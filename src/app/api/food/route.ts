@@ -3,16 +3,33 @@ import { getCurrentUser } from "@/lib/session";
 import { db } from "@/lib/db";
 import { resolveExpiresAt } from "@/lib/food";
 import { loadShelfLife } from "@/lib/shelfLife";
+import { getPhotoUrl } from "@/lib/storage";
+import { buildCreatorNameMap, creatorNameFor } from "@/lib/foodView";
 
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return Response.json({ error: "unauthorized" }, { status: 401 });
-  const items = await db.foodItem.findMany({
-    where: { householdId: user.householdId, status: "active" },
-    orderBy: [{ expiresAt: "asc" }],
-    include: { photo: true },
-  });
-  return Response.json({ items });
+  const [items, members] = await Promise.all([
+    db.foodItem.findMany({
+      where: { householdId: user.householdId, status: "active" },
+      orderBy: [{ expiresAt: "asc" }],
+      include: { photo: true },
+    }),
+    db.user.findMany({ where: { householdId: user.householdId } }),
+  ]);
+  const nameMap = buildCreatorNameMap(members);
+  const dto = await Promise.all(
+    items.map(async (it) => ({
+      id: it.id,
+      name: it.name,
+      category: it.category,
+      storedAt: it.storedAt,
+      expiresAt: it.expiresAt,
+      photoUrl: it.photo?.objectKey ? await getPhotoUrl(it.photo.objectKey) : null,
+      createdByName: creatorNameFor(it.createdBy, nameMap),
+    })),
+  );
+  return Response.json({ items: dto });
 }
 
 export async function POST(req: NextRequest) {
