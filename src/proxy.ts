@@ -1,11 +1,11 @@
-// src/middleware.ts
+// src/proxy.ts
 import { NextResponse, type NextRequest } from "next/server";
 import { verifySession, SESSION_COOKIE } from "@/lib/auth/cookie";
 
 // Paths that must stay reachable without a session.
 const PUBLIC_PREFIXES = ["/login", "/api/auth/login", "/api/cron/remind"];
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   if (PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
     return NextResponse.next();
@@ -22,6 +22,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  // Exclude Next internals and PWA/static assets so the login page itself loads.
   matcher: ["/((?!_next/|favicon.ico|manifest.json|sw.js|icons/|.*\\.(?:png|jpg|jpeg|svg|ico|webmanifest)$).*)"],
 };
