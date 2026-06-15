@@ -20,12 +20,19 @@ npx zeabur@latest service redeploy --id 6a2d5ceed131a64afc9f3e19 -y -i=false
 2. AI 辨識內容物 → `AI_HUB_*` OpenAI 相容視覺端點（已接 OpenAI gpt-4o-mini）
 3. 估算有效期限 → Postgres + `ShelfLife` 12 類保存期（已 seed）
 
+### 照片顯示 / 加入者（2026-06-15 上線）
+- **照片由 App 自己出圖**：`GET /api/photo/[id]`（需登入）→ `storage.getPhotoBytes` 從 MinIO **內部** endpoint 讀 bytes → 串給瀏覽器（`private` 快取）。清單 `photoUrl = /api/photo/<photoId>`（同源、自動帶 cookie）。
+- **刻意不用** presigned 公開網址 / MinIO 公開網域：照片因此「需登入才看得到」（較私密），且不依賴 MinIO 子網域 TLS（曾卡在憑證簽發，故放棄該路線；`S3_PUBLIC_ENDPOINT` 已移除）。
+- 縮圖 + 點擊放大 lightbox 在 `FoodList`/`PhotoLightbox`；每筆顯示 `createdByName`（household 成員 id→名字，查不到省略）。
+- 設計/計畫：`docs/superpowers/specs/2026-06-15-photo-display-and-attribution-design.md`（原設計為公開網域 presigned，部署時因憑證問題改為 App 出圖）。
+
 ### 登入 / 權限（2026-06-15 上線）
 - **全站需登入**：輸入電話即登入（不驗證，家人信任情境）；中介層擋未登入。
 - **管理員**：寫死常數 `ADMIN_PHONE = "0926571988"`（`src/lib/auth/admin.ts`），只有此號碼能進 `/admin` 增刪使用者。
 - Session：HMAC 簽章 cookie `fridge_session`，需 `SESSION_SECRET`（已設 web 服務）；`getCurrentUser()` 每請求回 DB 確認 → 刪人即時失效。
 - 設計/計畫：`docs/superpowers/specs/2026-06-15-admin-phone-login-design.md`、`docs/superpowers/plans/2026-06-15-admin-phone-login.md`。
-- ⚠️ **edge middleware 雷**：`src/middleware.ts` 在 edge runtime 跑，**不可**(直接或間接)匯入 Prisma / `next/headers` / 任何 Node-only 模組，否則 `node:util/types` 載入失敗、全站 500。故 `SESSION_COOKIE` 常數放在無依賴的 `src/lib/auth/cookie.ts`，middleware 只從那裡匯入。驗證法：build 後 grep `.next/server/edge/chunks/*.js` 不得出現 `adapter-pg`/`node:util/types`。本機 `next build` 不會擋下此錯，只在 Zeabur runtime 爆。
+- 登入牆在 `src/proxy.ts`（Next 16 的 `middleware.ts` 已改名 `proxy.ts`、export `proxy`；Next 16 proxy 預設跑 Node.js runtime，非 edge）。`SESSION_COOKIE` 仍放無依賴的 `src/lib/auth/cookie.ts`。
+- ⚠️ **舊雷（仍留意）**：早期 `middleware.ts` 在 edge runtime 間接 import 到 Prisma（`@/lib/db`→`node:util/types`）導致全站 500。本機 `next build` 不會擋下此類 edge import 錯，只在 runtime 爆；改 proxy/middleware 時別讓它 import Node-only 模組。
 
 ### 灌 seed（保存期資料）
 production 是 standalone build、無 prisma/tsx CLI，從本機用 Postgres 對外 TCP 跑：
@@ -35,7 +42,4 @@ DATABASE_URL="postgresql://root:<pw>@<public-host>:<port>/zeabur" npx tsx prisma
 （對外 host:port 用 `service network --id <postgresql>` 取得；seed 為 upsert，可重跑）
 
 ### 待辦
-- 照片「顯示」功能尚未做（`getPhotoUrl` 未被前端使用）；之後要顯示，需對 MinIO `web`(9000) 綁公開網域，presigned URL 才能被瀏覽器讀取。
 - web 服務尚有 `NEXTAUTH_SECRET` / `LINE_LOGIN_*` / `AUTH_TRUST_HOST` 殘留變數（無害，未用）。
-- Next 16 已 deprecate `middleware.ts`，建議改名 `proxy.ts` + export `proxy`（目前仍可運作、只是 build 警告）。
-- 舊 `local-default` 假使用者（名「我」、phone=null）仍在使用者名單顯示；登不進、可由管理員自行刪。
