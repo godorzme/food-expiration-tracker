@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { ensureUserAndHousehold } from "./household";
+import { getSharedHousehold } from "./household";
 
 function makeDb() {
   const state: any = { user: null };
@@ -54,5 +55,30 @@ describe("ensureUserAndHousehold", () => {
     expect(user).toBe(existingUser);
     expect(create).toHaveBeenCalledOnce();
     expect(findUnique).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("getSharedHousehold", () => {
+  it("returns the existing household when one exists", async () => {
+    const db = {
+      household: {
+        findFirst: async () => ({ id: "hh_1", name: "家" }),
+        create: async () => { throw new Error("should not create"); },
+      },
+    } as any;
+    const hh = await getSharedHousehold(db);
+    expect(hh.id).toBe("hh_1");
+  });
+  it("creates a household when none exists", async () => {
+    let created = false;
+    const db = {
+      household: {
+        findFirst: async () => null,
+        create: async ({ data }: any) => { created = true; return { id: "hh_new", name: data.name }; },
+      },
+    } as any;
+    const hh = await getSharedHousehold(db);
+    expect(created).toBe(true);
+    expect(hh.id).toBe("hh_new");
   });
 });

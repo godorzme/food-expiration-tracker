@@ -38,3 +38,13 @@ export async function ensureUserAndHousehold(db: DbLike, profile: LineProfile) {
     throw err;
   }
 }
+
+type HouseholdDb = { household: { findFirst: (args?: unknown) => Promise<{ id: string; name: string } | null>; create: (args: { data: { name: string } }) => Promise<{ id: string; name: string }> } };
+
+// The app uses a single shared household for everyone. Return the existing one,
+// or create it on first use. Created lazily so a fresh DB still works.
+export async function getSharedHousehold(db: HouseholdDb): Promise<{ id: string; name: string }> {
+  const existing = await db.household.findFirst();
+  if (existing) return existing;
+  return db.household.create({ data: { name: "我家的冰箱" } });
+}
