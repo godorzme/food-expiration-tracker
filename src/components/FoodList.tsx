@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { expiryState, type ExpiryState } from "@/lib/expiryState";
+import { PhotoLightbox } from "@/components/PhotoLightbox";
 
 const COLOR: Record<ExpiryState, string> = {
   expired: "border-red-500 bg-red-50",
@@ -16,6 +17,8 @@ interface FoodItemDTO {
   category: string;
   storedAt: string;
   expiresAt: string | null;
+  photoUrl?: string | null;
+  createdByName?: string | null;
 }
 
 export function FoodList({ leadDays }: { leadDays: number }) {
@@ -23,6 +26,7 @@ export function FoodList({ leadDays }: { leadDays: number }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const now = useState(() => new Date())[0];
+  const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null);
 
   async function load() {
     setError(false);
@@ -65,28 +69,42 @@ export function FoodList({ leadDays }: { leadDays: number }) {
   if (items.length === 0) return <p className="text-sm text-gray-500">冰箱是空的,點「＋ 新增」記錄第一樣食物。</p>;
 
   return (
-    <ul className="flex flex-col gap-2">
-      {items.map((it) => {
-        const exp = it.expiresAt ? new Date(it.expiresAt) : null;
-        const state = expiryState(exp, now, leadDays);
-        return (
-          <li key={it.id} className={`rounded-lg border-l-4 p-3 ${COLOR[state]}`}>
-            <div className="flex justify-between">
-              <div>
-                <div className="font-semibold">{it.name}</div>
-                <div className="text-sm text-gray-500">
-                  {it.category} · 放入 {new Date(it.storedAt).toLocaleDateString()}
-                  {exp ? ` · 到期 ${exp.toLocaleDateString()}` : " · 無到期日"}
+    <>
+      <ul className="flex flex-col gap-2">
+        {items.map((it) => {
+          const exp = it.expiresAt ? new Date(it.expiresAt) : null;
+          const state = expiryState(exp, now, leadDays);
+          return (
+            <li key={it.id} className={`flex items-center gap-3 rounded-lg border-l-4 p-3 ${COLOR[state]}`}>
+              {it.photoUrl ? (
+                <img
+                  src={it.photoUrl}
+                  alt={it.name}
+                  loading="lazy"
+                  onClick={() => setLightbox({ src: it.photoUrl as string, alt: it.name })}
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                  className="h-14 w-14 flex-shrink-0 cursor-pointer rounded-md object-cover"
+                />
+              ) : null}
+              <div className="flex flex-1 items-center justify-between">
+                <div>
+                  <div className="font-semibold">{it.name}</div>
+                  <div className="text-sm text-gray-500">
+                    {it.category} · 放入 {new Date(it.storedAt).toLocaleDateString()}
+                    {exp ? ` · 到期 ${exp.toLocaleDateString()}` : " · 無到期日"}
+                    {it.createdByName ? ` · ${it.createdByName} 加的` : ""}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button className="text-sm text-green-700" onClick={() => mark(it.id, "consumed")}>吃掉</button>
+                  <button className="text-sm text-red-700" onClick={() => mark(it.id, "discarded")}>丟掉</button>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <button className="text-sm text-green-700" onClick={() => mark(it.id, "consumed")}>吃掉</button>
-                <button className="text-sm text-red-700" onClick={() => mark(it.id, "discarded")}>丟掉</button>
-              </div>
-            </div>
-          </li>
-        );
-      })}
-    </ul>
+            </li>
+          );
+        })}
+      </ul>
+      {lightbox && <PhotoLightbox src={lightbox.src} alt={lightbox.alt} onClose={() => setLightbox(null)} />}
+    </>
   );
 }
