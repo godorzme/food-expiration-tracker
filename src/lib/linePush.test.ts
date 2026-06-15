@@ -21,4 +21,11 @@ describe("pushLine", () => {
     vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("x"); }));
     expect(await pushLine("U1", "hi")).toBe(false);
   });
+  it("returns false for null lineUserId without fetching", async () => {
+    vi.stubEnv("LINE_MESSAGING_CHANNEL_ACCESS_TOKEN", "tok");
+    const f = vi.fn();
+    vi.stubGlobal("fetch", f);
+    expect(await pushLine(null, "x")).toBe(false);
+    expect(f).not.toHaveBeenCalled();
+  });
 });

@@ -1,4 +1,5 @@
-export async function pushLine(lineUserId: string, text: string): Promise<boolean> {
+export async function pushLine(lineUserId: string | null | undefined, text: string): Promise<boolean> {
+  if (!lineUserId) return false;
   const token = process.env.LINE_MESSAGING_CHANNEL_ACCESS_TOKEN;
   if (!token) return false;
   try {
