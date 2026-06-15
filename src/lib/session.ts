@@ -1,10 +1,12 @@
 // src/lib/session.ts
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
-import { verifySession } from "@/lib/auth/cookie";
+import { verifySession, SESSION_COOKIE } from "@/lib/auth/cookie";
 import { isAdminPhone } from "@/lib/auth/admin";
 
-export const SESSION_COOKIE = "fridge_session";
+// Re-exported so existing imports (`@/lib/session`) keep working; the source of
+// truth is the edge-safe cookie module.
+export { SESSION_COOKIE };
 
 export interface CurrentUser {
   id: string;

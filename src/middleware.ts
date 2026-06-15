@@ -1,7 +1,6 @@
 // src/middleware.ts
 import { NextResponse, type NextRequest } from "next/server";
-import { verifySession } from "@/lib/auth/cookie";
-import { SESSION_COOKIE } from "@/lib/session";
+import { verifySession, SESSION_COOKIE } from "@/lib/auth/cookie";
 
 // Paths that must stay reachable without a session.
 const PUBLIC_PREFIXES = ["/login", "/api/auth/login", "/api/cron/remind"];

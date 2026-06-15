@@ -1,6 +1,12 @@
 // src/lib/auth/cookie.ts
 // HMAC-SHA256 signed token "<userId>.<sig>". Uses Web Crypto + btoa/atob so it
 // runs in both the edge middleware runtime and node route handlers.
+//
+// The session cookie NAME lives here (not in session.ts) on purpose: middleware
+// runs in the edge runtime and must NOT transitively import session.ts, which
+// pulls in Prisma (node:util/types) and crashes the edge bundle.
+export const SESSION_COOKIE = "fridge_session";
+
 function getSecret(): string {
   const s = process.env.SESSION_SECRET;
   if (!s) throw new Error("SESSION_SECRET is not set");
