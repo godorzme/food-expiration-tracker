@@ -19,7 +19,8 @@ model Household {
 
 model User {
   id          String             @id @default(cuid())
-  lineUserId  String             @unique
+  phone       String?            @unique
+  lineUserId  String?            @unique
   displayName String
   pictureUrl  String?
   household   Household          @relation(fields: [householdId], references: [id])
