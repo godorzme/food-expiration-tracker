@@ -1,23 +1,34 @@
+// src/lib/session.ts
+import { cookies } from "next/headers";
 import { db } from "@/lib/db";
-import { ensureUserAndHousehold } from "@/lib/household";
+import { verifySession } from "@/lib/auth/cookie";
+import { isAdminPhone } from "@/lib/auth/admin";
+
+export const SESSION_COOKIE = "fridge_session";
 
 export interface CurrentUser {
   id: string;
   householdId: string;
-  lineUserId: string;
+  phone: string | null;
   name: string;
+  isAdmin: boolean;
 }
 
-// Login is disabled for now — everyone who opens the app shares a single local
-// household/user. Kept as a get-or-create so re-adding real auth later is a small change.
-const LOCAL_PROFILE = { lineUserId: "local-default", displayName: "我", pictureUrl: null };
-
-export async function getCurrentUser(): Promise<CurrentUser> {
-  const user = await ensureUserAndHousehold(db, LOCAL_PROFILE);
+// Reads the signed session cookie and re-confirms the user still exists in the
+// DB on every request — so deleting a user immediately revokes their access.
+export async function getCurrentUser(): Promise<CurrentUser | null> {
+  const store = await cookies();
+  const token = store.get(SESSION_COOKIE)?.value;
+  if (!token) return null;
+  const userId = await verifySession(token);
+  if (!userId) return null;
+  const user = await db.user.findUnique({ where: { id: userId } });
+  if (!user) return null;
   return {
     id: user.id,
     householdId: user.householdId,
-    lineUserId: user.lineUserId,
+    phone: user.phone,
     name: user.displayName,
+    isAdmin: !!user.phone && isAdminPhone(user.phone),
   };
 }

@@ -9,7 +9,9 @@ export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const user = await getCurrentUser();
-  const hh = await db.household.findUnique({ where: { id: user.householdId } });
+  const hh = user
+    ? await db.household.findUnique({ where: { id: user.householdId } })
+    : null;
   return (
     <main className="mx-auto max-w-md p-4">
       <div className="mb-4 flex items-center justify-between">
