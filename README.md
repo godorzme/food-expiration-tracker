@@ -49,8 +49,9 @@ npx next build
 |------|------|
 | `DATABASE_URL` | PostgreSQL 連線字串 |
 | `APP_BASE_URL` | 對外網址(本機 `http://localhost:3000`) |
-| `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_BUCKET` | Cloudflare R2 |
-| `AI_HUB_BASE_URL` / `AI_HUB_API_KEY` / `AI_HUB_VISION_MODEL` | AI Hub 視覺辨識(OpenAI 相容端點) |
+| `S3_ENDPOINT` / `S3_ACCESS_KEY` / `S3_SECRET_KEY` / `S3_BUCKET` | S3 相容物件儲存(原圖)。生產環境用 Zeabur Object Storage(MinIO)。另可選 `S3_REGION`、`S3_FORCE_PATH_STYLE`(MinIO 須為 `true`) |
+| `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_BUCKET` | (相容用)未設 `S3_ENDPOINT` 時改走 Cloudflare R2 |
+| `AI_HUB_BASE_URL` / `AI_HUB_API_KEY` / `AI_HUB_VISION_MODEL` | 視覺辨識(OpenAI 相容端點,可填 Zeabur AI Hub 或自有 key) |
 | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | Web Push 金鑰(`npx web-push generate-vapid-keys`) |
 | `CRON_SECRET` | 提醒 API 的存取密鑰(GitHub Actions 帶同一組) |
 
