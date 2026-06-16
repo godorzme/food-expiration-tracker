@@ -12,6 +12,7 @@ export async function GET() {
     db.foodItem.findMany({
       where: { householdId: user.householdId, status: "active" },
       orderBy: [{ expiresAt: "asc" }],
+      include: { location: true },
     }),
     db.user.findMany({ where: { householdId: user.householdId } }),
   ]);
@@ -24,6 +25,8 @@ export async function GET() {
     expiresAt: it.expiresAt,
     photoUrl: it.photoId ? `/api/photo/${it.photoId}` : null,
     createdByName: creatorNameFor(it.createdBy, nameMap),
+    locationId: it.locationId,
+    locationName: it.location?.name ?? null,
   }));
   return Response.json({ items: dto });
 }
@@ -48,6 +51,16 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: "invalid storedAt" }, { status: 400 });
     if (it.expiresAt && Number.isNaN(new Date(it.expiresAt as string).getTime()))
       return Response.json({ error: "invalid expiresAt" }, { status: 400 });
+    if (typeof it.locationId !== "string" || !it.locationId)
+      return Response.json({ error: "請選存放點" }, { status: 400 });
+  }
+
+  const validLocationIds = new Set(
+    (await db.location.findMany({ where: { householdId: user.householdId } })).map((l) => l.id),
+  );
+  for (const it of items) {
+    if (!validLocationIds.has(it.locationId as string))
+      return Response.json({ error: "存放點不存在" }, { status: 400 });
   }
 
   const shelf = await loadShelfLife();
@@ -65,6 +78,7 @@ export async function POST(req: NextRequest) {
       return db.foodItem.create({
         data: {
           householdId: user.householdId,
+          locationId: it.locationId as string,
           photoId: (it.photoId as string) ?? null,
           name: it.name as string,
           category: it.category as string,
