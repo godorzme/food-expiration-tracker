@@ -34,6 +34,9 @@ model Location {
   household   Household  @relation(fields: [householdId], references: [id])
   householdId String
   name        String
+  photo       Photo?     @relation(fields: [photoId], references: [id])
+  photoId     String?
+  createdAt   DateTime   @default(now())
   foodItems   FoodItem[]
 }
 
@@ -44,6 +47,7 @@ model Photo {
   uploadedBy String
   createdAt  DateTime   @default(now())
   foodItems  FoodItem[]
+  locations  Location[]
 }
 
 enum FoodStatus {
