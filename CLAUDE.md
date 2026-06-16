@@ -2,6 +2,8 @@
 
 ## Zeabur 部署
 
+> 對外名稱是「**食物存放清單**」（食物過期管理）——UI 文案/PWA 名稱都用這個，別再叫「冰箱」。
+
 - Project：`food-expiration-tracker`（ID `6a2d5c6cd131a64afc9f3e03`）
 - 對外網址：https://food-expiration-tracker.zeabur.app
 - 服務（同專案內）：
@@ -48,6 +50,11 @@ DATABASE_URL="postgresql://root:<pw>@<public-host>:<port>/zeabur" npx tsx prisma
 - 刪除存放點：有 active 食物 → 409 擋下；否則先把非 active 項目 detach（避 FK）再刪。
 - 位置照片重用既有照片管線（上傳 `POST /api/photos`、檢視 `/api/photo/[id]`）。
 - 管理頁 `/admin/locations`（從 `/admin` 連入）。helpers 在 `src/lib/locations.ts`（有單元測試）。
+
+### 使用者頭像（2026-06-16 上線）
+- 每位使用者可在 `/me`（首頁頂部頭像點進）上傳自己的頭像；重用照片管線，存 `User.pictureUrl = /api/photo/<photoId>`（無 schema 變更）。
+- `Avatar` 共用元件（`src/components/ui/Avatar.tsx`，無頭像顯示名字首字）；顯示在首頁頂部、食物卡片「誰加的」、管理頁名單。
+- API：`GET/PATCH /api/me`；`getCurrentUser().avatarUrl`；`/api/food` 帶 `createdByAvatar`；`/api/admin/users` 帶 `avatarUrl`。
 
 ### 待辦
 - web 服務尚有 `NEXTAUTH_SECRET` / `LINE_LOGIN_*` / `AUTH_TRUST_HOST` 殘留變數（無害，未用）。
