@@ -14,6 +14,7 @@ export interface CurrentUser {
   phone: string | null;
   name: string;
   isAdmin: boolean;
+  avatarUrl: string | null;
 }
 
 // Reads the signed session cookie and re-confirms the user still exists in the
@@ -32,5 +33,6 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     phone: user.phone,
     name: user.displayName,
     isAdmin: !!user.phone && isAdminPhone(user.phone),
+    avatarUrl: user.pictureUrl,
   };
 }
