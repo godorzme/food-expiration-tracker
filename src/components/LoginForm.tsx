@@ -1,4 +1,3 @@
-// src/components/LoginForm.tsx
 "use client";
 import { useState } from "react";
 
@@ -39,14 +38,14 @@ export function LoginForm() {
         placeholder="例：0912-345-678"
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
-        className="w-full rounded-lg border border-gray-300 px-4 py-3 text-lg"
+        className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-center text-lg outline-none focus:border-[#5fbe91]"
         required
       />
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-center text-sm text-red-600">{error}</p>}
       <button
         type="submit"
         disabled={loading}
-        className="rounded-lg bg-[#5FBE91] px-4 py-3 font-semibold text-white disabled:opacity-50"
+        className="rounded-xl bg-[#5fbe91] px-4 py-3 text-base font-semibold text-white active:bg-[#3e9e73] disabled:opacity-50"
       >
         {loading ? "登入中…" : "登入"}
       </button>
