@@ -41,5 +41,13 @@ DATABASE_URL="postgresql://root:<pw>@<public-host>:<port>/zeabur" npx tsx prisma
 ```
 （對外 host:port 用 `service network --id <postgresql>` 取得；seed 為 upsert，可重跑）
 
+### 存放點（2026-06-16 上線）
+- 多存放點：`Location` 表（加了 `photoId` 位置照片 + `createdAt`）；`FoodItem.locationId` 啟用。
+- `GET /api/locations`（登入即可）會在該 household 無存放點時自動建預設「冰箱」；寫入（`POST/PATCH/DELETE /api/admin/locations[/[id]]`）限管理員。
+- 新增食物**必選存放點**（預設第一個）；首頁頂部 `LocationChips` 依存放點 client 過濾；卡片顯示存放點名。
+- 刪除存放點：有 active 食物 → 409 擋下；否則先把非 active 項目 detach（避 FK）再刪。
+- 位置照片重用既有照片管線（上傳 `POST /api/photos`、檢視 `/api/photo/[id]`）。
+- 管理頁 `/admin/locations`（從 `/admin` 連入）。helpers 在 `src/lib/locations.ts`（有單元測試）。
+
 ### 待辦
 - web 服務尚有 `NEXTAUTH_SECRET` / `LINE_LOGIN_*` / `AUTH_TRUST_HOST` 殘留變數（無害，未用）。
