@@ -1,7 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CATEGORIES } from "@/lib/recognition";
+import { LocationChips } from "@/components/ui/LocationChips";
+import { defaultLocationId } from "@/lib/locations";
 
 interface Row { id: string; name: string; category: string; expiresAt: string; fromAI: boolean }
 
@@ -22,6 +24,19 @@ export function AddFoodForm() {
   const [rows, setRows] = useState<Row[]>([]);
   const [busy, setBusy] = useState(false);
   const [recognizing, setRecognizing] = useState(false);
+  const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
+  const [locationId, setLocationId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/locations")
+      .then((r) => (r.ok ? r.json() : { locations: [] }))
+      .then((d) => {
+        const locs = d.locations ?? [];
+        setLocations(locs);
+        setLocationId((cur) => cur ?? defaultLocationId(locs));
+      })
+      .catch(() => {});
+  }, []);
 
   async function onPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -56,7 +71,7 @@ export function AddFoodForm() {
       const res = await fetch("/api/food", {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({ items: rows.filter((r) => r.name.trim()).map((r) => ({
-          name: r.name, category: r.category, photoId, storedAt: stored,
+          name: r.name, category: r.category, photoId, locationId, storedAt: stored,
           expiresAt: r.expiresAt ? new Date(r.expiresAt).toISOString() : null, isRecognized: r.fromAI,
         })) }),
       });
@@ -67,7 +82,7 @@ export function AddFoodForm() {
     }
   }
 
-  const canSave = !busy && rows.some((r) => r.name.trim());
+  const canSave = !busy && !!locationId && rows.some((r) => r.name.trim());
 
   return (
     <div className="flex flex-col gap-4">
@@ -83,6 +98,11 @@ export function AddFoodForm() {
 
       {rows.length > 0 && (
         <>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-[#8a8178]">存放點</label>
+            <LocationChips locations={locations} selected={locationId} onSelect={setLocationId} allowAll={false} />
+          </div>
+
           <div className="flex flex-col gap-1">
             <label className="text-xs text-[#8a8178]">放入時間（預設＝拍照時間）</label>
             <input className={inputCls} type="datetime-local" value={storedAt} onChange={(e) => setStoredAt(e.target.value)} />
