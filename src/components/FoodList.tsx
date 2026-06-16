@@ -4,6 +4,7 @@ import { expiryState } from "@/lib/expiryState";
 import { StatusPill, statusMeta } from "@/components/ui/StatusPill";
 import { PhotoLightbox } from "@/components/PhotoLightbox";
 import { LocationChips } from "@/components/ui/LocationChips";
+import { Avatar } from "@/components/ui/Avatar";
 
 interface FoodItemDTO {
   id: string;
@@ -13,6 +14,7 @@ interface FoodItemDTO {
   expiresAt: string | null;
   photoUrl?: string | null;
   createdByName?: string | null;
+  createdByAvatar?: string | null;
   locationId?: string | null;
   locationName?: string | null;
 }
@@ -115,9 +117,14 @@ export function FoodList({ leadDays }: { leadDays: number }) {
                 <div className="truncate text-xs text-[#8a8178]">
                   {it.category}
                   {it.locationName ? ` · ${it.locationName}` : ""}
-                  {it.createdByName ? ` · ${it.createdByName} 加的` : ""}
                   {exp ? ` · 到期 ${exp.toLocaleDateString("zh-TW")}` : ""}
                 </div>
+                {it.createdByName && (
+                  <div className="flex items-center gap-1.5 text-xs text-[#8a8178]">
+                    <Avatar src={it.createdByAvatar} name={it.createdByName} size={18} />
+                    {it.createdByName} 加的
+                  </div>
+                )}
                 <div className="mt-1 flex gap-2">
                   <button onClick={() => mark(it.id, "consumed")} className="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700">✓ 吃掉</button>
                   <button onClick={() => mark(it.id, "discarded")} className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700">🗑 丟掉</button>

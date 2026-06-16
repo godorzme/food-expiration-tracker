@@ -6,6 +6,7 @@ import { FoodList } from "@/components/FoodList";
 import { EnablePush } from "@/components/EnablePush";
 import { LogoutButton } from "@/components/LogoutButton";
 import { AppHeader } from "@/components/ui/AppHeader";
+import { Avatar } from "@/components/ui/Avatar";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,7 @@ export default async function Home() {
           <>
             {user.isAdmin && <Link href="/admin" className="text-[#3e9e73]">⚙️ 管理</Link>}
             <LogoutButton />
+            <Link href="/me" aria-label="我的"><Avatar src={user.avatarUrl} name={user.name} size={32} /></Link>
           </>
         }
       />
