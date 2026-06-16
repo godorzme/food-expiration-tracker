@@ -70,8 +70,8 @@ export function FoodList({ leadDays }: { leadDays: number }) {
   if (items.length === 0)
     return (
       <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
-        <div className="mb-2 text-4xl">🧊</div>
-        <p className="text-sm text-[#8a8178]">冰箱是空的，點下方「＋ 新增食物」記錄第一樣吧。</p>
+        <div className="mb-2 text-4xl">🍱</div>
+        <p className="text-sm text-[#8a8178]">還沒有食物，點下方「＋ 新增食物」記錄第一樣吧。</p>
       </div>
     );
 

@@ -17,7 +17,7 @@ export default async function Home() {
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4">
       <AppHeader
-        title="冰箱清單"
+        title="食物存放清單"
         subtitle={`今天 ${today}`}
         actions={
           <>

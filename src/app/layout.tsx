@@ -10,8 +10,8 @@ const notoTC = Noto_Sans_TC({
 });
 
 export const metadata: Metadata = {
-  title: "冰箱食物追蹤",
-  description: "追蹤冰箱食物與到期日",
+  title: "食物存放清單",
+  description: "追蹤家裡食物的存放與到期",
   manifest: "/manifest.json",
 };
 
