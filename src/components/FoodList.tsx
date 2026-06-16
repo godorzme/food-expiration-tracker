@@ -1,15 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import { expiryState, type ExpiryState } from "@/lib/expiryState";
+import { expiryState } from "@/lib/expiryState";
+import { StatusPill, statusMeta } from "@/components/ui/StatusPill";
 import { PhotoLightbox } from "@/components/PhotoLightbox";
-
-const COLOR: Record<ExpiryState, string> = {
-  expired: "border-red-500 bg-red-50",
-  urgent: "border-orange-500 bg-orange-50",
-  soon: "border-yellow-500 bg-yellow-50",
-  ok: "border-green-500 bg-green-50",
-  none: "border-gray-300 bg-gray-50",
-};
 
 interface FoodItemDTO {
   id: string;
@@ -41,9 +34,7 @@ export function FoodList({ leadDays }: { leadDays: number }) {
       setLoading(false);
     }
   }
-  useEffect(() => {
-    load();
-  }, []);
+  useEffect(() => { load(); }, []);
 
   async function mark(id: string, status: string) {
     try {
@@ -59,23 +50,35 @@ export function FoodList({ leadDays }: { leadDays: number }) {
     }
   }
 
-  if (loading) return <p className="text-sm text-gray-500">載入中…</p>;
+  if (loading) return <p className="py-8 text-center text-sm text-[#8a8178]">載入中…</p>;
   if (error)
     return (
-      <div className="text-sm text-red-600">
-        載入失敗。<button className="underline" onClick={() => load()}>重試</button>
+      <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
+        <p className="mb-3 text-sm text-red-600">載入失敗</p>
+        <button onClick={() => load()} className="rounded-xl bg-[#5fbe91] px-4 py-2 text-sm font-semibold text-white">重新整理</button>
       </div>
     );
-  if (items.length === 0) return <p className="text-sm text-gray-500">冰箱是空的,點「＋ 新增」記錄第一樣食物。</p>;
+  if (items.length === 0)
+    return (
+      <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
+        <div className="mb-2 text-4xl">🧊</div>
+        <p className="text-sm text-[#8a8178]">冰箱是空的，點下方「＋ 新增食物」記錄第一樣吧。</p>
+      </div>
+    );
 
   return (
     <>
-      <ul className="flex flex-col gap-2">
+      <ul className="flex flex-col gap-3">
         {items.map((it) => {
           const exp = it.expiresAt ? new Date(it.expiresAt) : null;
           const state = expiryState(exp, now, leadDays);
+          const edge = statusMeta(state).edge;
           return (
-            <li key={it.id} className={`flex items-center gap-3 rounded-lg border-l-4 p-3 ${COLOR[state]}`}>
+            <li
+              key={it.id}
+              className="flex items-center gap-3 overflow-hidden rounded-2xl bg-white p-3 shadow-sm"
+              style={{ borderLeft: `4px solid ${edge}` }}
+            >
               {it.photoUrl ? (
                 <img
                   src={it.photoUrl}
@@ -83,21 +86,24 @@ export function FoodList({ leadDays }: { leadDays: number }) {
                   loading="lazy"
                   onClick={() => setLightbox({ src: it.photoUrl as string, alt: it.name })}
                   onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                  className="h-14 w-14 flex-shrink-0 cursor-pointer rounded-md object-cover"
+                  className="h-16 w-16 flex-shrink-0 cursor-pointer rounded-xl object-cover"
                 />
-              ) : null}
-              <div className="flex flex-1 items-center justify-between">
-                <div>
-                  <div className="font-semibold">{it.name}</div>
-                  <div className="text-sm text-gray-500">
-                    {it.category} · 放入 {new Date(it.storedAt).toLocaleDateString()}
-                    {exp ? ` · 到期 ${exp.toLocaleDateString()}` : " · 無到期日"}
-                    {it.createdByName ? ` · ${it.createdByName} 加的` : ""}
-                  </div>
+              ) : (
+                <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-xl bg-[#f1ece3] text-2xl">🍽️</div>
+              )}
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="truncate font-semibold text-[#2d2a26]">{it.name}</span>
+                  <StatusPill state={state} />
                 </div>
-                <div className="flex gap-2">
-                  <button className="text-sm text-green-700" onClick={() => mark(it.id, "consumed")}>吃掉</button>
-                  <button className="text-sm text-red-700" onClick={() => mark(it.id, "discarded")}>丟掉</button>
+                <div className="truncate text-xs text-[#8a8178]">
+                  {it.category}
+                  {it.createdByName ? ` · ${it.createdByName} 加的` : ""}
+                  {exp ? ` · 到期 ${exp.toLocaleDateString("zh-TW")}` : ""}
+                </div>
+                <div className="mt-1 flex gap-2">
+                  <button onClick={() => mark(it.id, "consumed")} className="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700">✓ 吃掉</button>
+                  <button onClick={() => mark(it.id, "discarded")} className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700">🗑 丟掉</button>
                 </div>
               </div>
             </li>
