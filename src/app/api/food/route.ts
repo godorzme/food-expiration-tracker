@@ -3,7 +3,7 @@ import { getCurrentUser } from "@/lib/session";
 import { db } from "@/lib/db";
 import { resolveExpiresAt } from "@/lib/food";
 import { loadShelfLife } from "@/lib/shelfLife";
-import { buildCreatorNameMap, creatorNameFor } from "@/lib/foodView";
+import { buildCreatorNameMap, buildCreatorAvatarMap, creatorNameFor } from "@/lib/foodView";
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -17,6 +17,7 @@ export async function GET() {
     db.user.findMany({ where: { householdId: user.householdId } }),
   ]);
   const nameMap = buildCreatorNameMap(members);
+  const avatarMap = buildCreatorAvatarMap(members);
   const dto = items.map((it) => ({
     id: it.id,
     name: it.name,
@@ -25,6 +26,7 @@ export async function GET() {
     expiresAt: it.expiresAt,
     photoUrl: it.photoId ? `/api/photo/${it.photoId}` : null,
     createdByName: creatorNameFor(it.createdBy, nameMap),
+    createdByAvatar: avatarMap[it.createdBy] ?? null,
     locationId: it.locationId,
     locationName: it.location?.name ?? null,
   }));

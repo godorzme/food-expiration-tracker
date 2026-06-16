@@ -15,7 +15,7 @@ export async function GET() {
   if (!(await requireAdmin())) return Response.json({ error: "forbidden" }, { status: 403 });
   const users = await db.user.findMany({ orderBy: { createdAt: "asc" } });
   return Response.json({
-    users: users.map((u) => ({ id: u.id, phone: u.phone, name: u.displayName, createdAt: u.createdAt, isAdmin: !!u.phone && isAdminPhone(u.phone) })),
+    users: users.map((u) => ({ id: u.id, phone: u.phone, name: u.displayName, avatarUrl: u.pictureUrl, createdAt: u.createdAt, isAdmin: !!u.phone && isAdminPhone(u.phone) })),
   });
 }
 
