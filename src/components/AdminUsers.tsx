@@ -1,8 +1,9 @@
-// src/components/AdminUsers.tsx
 "use client";
 import { useEffect, useState } from "react";
 
 interface UserRow { id: string; phone: string | null; name: string; createdAt: string; isAdmin: boolean }
+
+const inputCls = "w-full rounded-xl border border-black/10 bg-white px-3 py-3 text-base outline-none focus:border-[#5fbe91]";
 
 export function AdminUsers() {
   const [users, setUsers] = useState<UserRow[]>([]);
@@ -87,57 +88,44 @@ export function AdminUsers() {
 
   return (
     <div className="flex flex-col gap-4">
-      <form onSubmit={add} className="rounded-lg border border-gray-200 p-4">
-        <h2 className="mb-2 font-semibold">新增使用者</h2>
-        <div className="flex flex-col gap-2">
-          <input type="text" placeholder="名字（例：媽）" value={name} onChange={(e) => setName(e.target.value)} className="rounded border border-gray-300 px-3 py-2" required />
-          <input type="tel" inputMode="tel" placeholder="電話（例：0912-345-678）" value={phone} onChange={(e) => setPhone(e.target.value)} className="rounded border border-gray-300 px-3 py-2" required />
-          <button type="submit" disabled={adding} className="rounded bg-[#5FBE91] px-4 py-2 font-semibold text-white disabled:opacity-50">{adding ? "新增中…" : "新增"}</button>
-        </div>
+      <form onSubmit={add} className="flex flex-col gap-2 rounded-2xl bg-white p-4 shadow-sm">
+        <h2 className="font-semibold text-[#2d2a26]">新增使用者</h2>
+        <input type="text" placeholder="名字（例：媽）" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} required />
+        <input type="tel" inputMode="tel" placeholder="電話（例：0912-345-678）" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} required />
+        <button type="submit" disabled={adding} className="rounded-xl bg-[#5fbe91] py-3 font-semibold text-white active:bg-[#3e9e73] disabled:opacity-50">{adding ? "新增中…" : "新增"}</button>
       </form>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
 
       {loading ? (
-        <p className="text-sm text-gray-500">載入中…</p>
+        <p className="py-6 text-center text-sm text-[#8a8178]">載入中…</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {users.map((u) => (
-            <li key={u.id} className="rounded-lg border border-gray-200 p-3">
+            <li key={u.id} className="rounded-2xl bg-white p-4 shadow-sm">
               {editingId === u.id ? (
                 <div className="flex flex-col gap-2">
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    placeholder="名字"
-                    className="rounded border border-gray-300 px-3 py-2"
-                  />
-                  <input
-                    type="tel"
-                    inputMode="tel"
-                    value={editPhone}
-                    onChange={(e) => setEditPhone(e.target.value)}
-                    disabled={u.isAdmin}
-                    placeholder="電話"
-                    className="rounded border border-gray-300 px-3 py-2 disabled:bg-gray-100 disabled:text-gray-400"
-                  />
-                  {u.isAdmin && <p className="text-xs text-gray-400">管理員電話固定，無法修改</p>}
+                  <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="名字" className={inputCls} />
+                  <input type="tel" inputMode="tel" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} disabled={u.isAdmin} placeholder="電話" className={`${inputCls} disabled:bg-gray-100 disabled:text-gray-400`} />
+                  {u.isAdmin && <p className="text-xs text-[#8a8178]">管理員電話固定，無法修改</p>}
                   <div className="flex gap-2">
-                    <button onClick={() => save(u)} disabled={saving} className="rounded bg-[#5FBE91] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{saving ? "儲存中…" : "儲存"}</button>
-                    <button onClick={cancelEdit} disabled={saving} className="rounded border border-gray-300 px-4 py-2 text-sm text-gray-600">取消</button>
+                    <button onClick={() => save(u)} disabled={saving} className="rounded-xl bg-[#5fbe91] px-4 py-2.5 text-sm font-semibold text-white active:bg-[#3e9e73] disabled:opacity-50">{saving ? "儲存中…" : "儲存"}</button>
+                    <button onClick={cancelEdit} disabled={saving} className="rounded-xl border border-black/10 px-4 py-2.5 text-sm text-[#8a8178]">取消</button>
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-semibold">{u.name}{u.isAdmin && <span className="ml-2 rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600">管理員</span>}</div>
-                    <div className="text-sm text-gray-500">{u.phone}</div>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 font-semibold text-[#2d2a26]">
+                      <span className="truncate">{u.name}</span>
+                      {u.isAdmin && <span className="flex-shrink-0 rounded-full bg-[#5fbe91]/15 px-2 py-0.5 text-xs text-[#3e9e73]">管理員</span>}
+                    </div>
+                    <div className="text-sm text-[#8a8178]">{u.phone}</div>
                   </div>
-                  <div className="flex gap-3">
-                    <button onClick={() => startEdit(u)} className="text-sm text-[#5FBE91]">編輯</button>
+                  <div className="flex flex-shrink-0 gap-2">
+                    <button onClick={() => startEdit(u)} className="rounded-lg bg-[#5fbe91]/10 px-3 py-2 text-sm font-medium text-[#3e9e73]">編輯</button>
                     {!u.isAdmin && (
-                      <button onClick={() => remove(u.id, u.name)} className="text-sm text-red-700">刪除</button>
+                      <button onClick={() => remove(u.id, u.name)} className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">刪除</button>
                     )}
                   </div>
                 </div>

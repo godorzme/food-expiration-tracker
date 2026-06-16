@@ -1,8 +1,8 @@
-// src/app/admin/page.tsx
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
 import { AdminUsers } from "@/components/AdminUsers";
+import { AppHeader } from "@/components/ui/AppHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -11,11 +11,8 @@ export default async function AdminPage() {
   if (!user) redirect("/login");
   if (!user.isAdmin) redirect("/");
   return (
-    <main className="mx-auto max-w-md p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold">使用者管理</h1>
-        <Link href="/" className="text-sm text-gray-500">‹ 返回</Link>
-      </div>
+    <main className="mx-auto w-full max-w-md flex-1 px-4 pb-8">
+      <AppHeader title="使用者管理" actions={<Link href="/" className="text-[#8a8178]">‹ 返回</Link>} />
       <AdminUsers />
     </main>
   );
