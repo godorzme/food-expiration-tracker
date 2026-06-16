@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { expiryState } from "@/lib/expiryState";
 import { StatusPill, statusMeta } from "@/components/ui/StatusPill";
 import { PhotoLightbox } from "@/components/PhotoLightbox";
+import { LocationChips } from "@/components/ui/LocationChips";
 
 interface FoodItemDTO {
   id: string;
@@ -12,6 +13,8 @@ interface FoodItemDTO {
   expiresAt: string | null;
   photoUrl?: string | null;
   createdByName?: string | null;
+  locationId?: string | null;
+  locationName?: string | null;
 }
 
 export function FoodList({ leadDays }: { leadDays: number }) {
@@ -20,6 +23,8 @@ export function FoodList({ leadDays }: { leadDays: number }) {
   const [error, setError] = useState(false);
   const now = useState(() => new Date())[0];
   const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null);
+  const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
+  const [selectedLoc, setSelectedLoc] = useState<string | null>(null);
 
   async function load() {
     setError(false);
@@ -35,6 +40,10 @@ export function FoodList({ leadDays }: { leadDays: number }) {
     }
   }
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    fetch("/api/locations").then((r) => r.ok ? r.json() : { locations: [] }).then((d) => setLocations(d.locations ?? [])).catch(() => {});
+  }, []);
 
   async function mark(id: string, status: string) {
     try {
@@ -66,10 +75,17 @@ export function FoodList({ leadDays }: { leadDays: number }) {
       </div>
     );
 
+  const shown = selectedLoc ? items.filter((it) => it.locationId === selectedLoc) : items;
+
   return (
     <>
+      {locations.length > 1 && (
+        <div className="mb-3">
+          <LocationChips locations={locations} selected={selectedLoc} onSelect={setSelectedLoc} />
+        </div>
+      )}
       <ul className="flex flex-col gap-3">
-        {items.map((it) => {
+        {shown.map((it) => {
           const exp = it.expiresAt ? new Date(it.expiresAt) : null;
           const state = expiryState(exp, now, leadDays);
           const edge = statusMeta(state).edge;
@@ -98,6 +114,7 @@ export function FoodList({ leadDays }: { leadDays: number }) {
                 </div>
                 <div className="truncate text-xs text-[#8a8178]">
                   {it.category}
+                  {it.locationName ? ` · ${it.locationName}` : ""}
                   {it.createdByName ? ` · ${it.createdByName} 加的` : ""}
                   {exp ? ` · 到期 ${exp.toLocaleDateString("zh-TW")}` : ""}
                 </div>
