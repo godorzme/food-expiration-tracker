@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { expiryState } from "@/lib/expiryState";
-import { StatusPill, statusMeta } from "@/components/ui/StatusPill";
+import { statusMeta } from "@/components/ui/StatusPill";
+import { StatusLegend } from "@/components/ui/StatusLegend";
 import { PhotoLightbox } from "@/components/PhotoLightbox";
 import { LocationChips } from "@/components/ui/LocationChips";
 import { Avatar } from "@/components/ui/Avatar";
@@ -81,6 +82,9 @@ export function FoodList({ leadDays }: { leadDays: number }) {
 
   return (
     <>
+      <div className="mb-3">
+        <StatusLegend />
+      </div>
       {locations.length > 1 && (
         <div className="mb-3">
           <LocationChips locations={locations} selected={selectedLoc} onSelect={setSelectedLoc} />
@@ -90,12 +94,12 @@ export function FoodList({ leadDays }: { leadDays: number }) {
         {shown.map((it) => {
           const exp = it.expiresAt ? new Date(it.expiresAt) : null;
           const state = expiryState(exp, now, leadDays);
-          const edge = statusMeta(state).edge;
+          const m = statusMeta(state);
           return (
             <li
               key={it.id}
-              className="flex items-center gap-3 overflow-hidden rounded-2xl bg-white p-3 shadow-sm"
-              style={{ borderLeft: `4px solid ${edge}` }}
+              className={`flex items-center gap-3 overflow-hidden rounded-2xl ${m.cardBg} p-3 shadow-sm`}
+              style={{ borderLeft: `4px solid ${m.edge}` }}
             >
               {it.photoUrl ? (
                 <img
@@ -107,28 +111,34 @@ export function FoodList({ leadDays }: { leadDays: number }) {
                   className="h-16 w-16 flex-shrink-0 cursor-pointer rounded-xl object-cover"
                 />
               ) : (
-                <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-xl bg-[#f1ece3] text-2xl">🍽️</div>
+                <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-xl bg-black/5 text-2xl">🍽️</div>
               )}
               <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <div className="flex items-center justify-between gap-2">
+                {/* Line 1: name + expiry (right) */}
+                <div className="flex items-baseline justify-between gap-2">
                   <span className="truncate font-semibold text-[#3c4650]">{it.name}</span>
-                  <StatusPill state={state} />
+                  <span className="flex-shrink-0 whitespace-nowrap text-xs font-medium text-[#3c4650]">
+                    {exp ? `到期 ${exp.getMonth() + 1}/${exp.getDate()}` : "無到期日"}
+                  </span>
                 </div>
-                <div className="text-xs font-medium text-[#3c4650]">
-                  {exp ? `到期 ${exp.getMonth() + 1}/${exp.getDate()}` : "無到期日"}
-                </div>
+                {/* Line 2: category · location */}
                 <div className="truncate text-xs text-[#8a8178]">
                   {it.category}{it.locationName ? ` · ${it.locationName}` : ""}
                 </div>
-                {it.createdByName && (
-                  <div className="flex items-center gap-1.5 text-xs text-[#8a8178]">
-                    <Avatar src={it.createdByAvatar} name={it.createdByName} size={18} />
-                    {it.createdByName} 加的
+                {/* Line 3: creator (left) + actions (right) */}
+                <div className="flex items-center justify-between gap-2">
+                  {it.createdByName ? (
+                    <div className="flex min-w-0 items-center gap-1.5 text-xs text-[#8a8178]">
+                      <Avatar src={it.createdByAvatar} name={it.createdByName} size={18} />
+                      <span className="truncate">{it.createdByName} 加的</span>
+                    </div>
+                  ) : (
+                    <span />
+                  )}
+                  <div className="flex flex-shrink-0 gap-2">
+                    <button onClick={() => mark(it.id, "consumed")} className="rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-green-700 shadow-sm">✓ 吃掉</button>
+                    <button onClick={() => mark(it.id, "discarded")} className="rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-red-700 shadow-sm">🗑 丟掉</button>
                   </div>
-                )}
-                <div className="mt-1 flex gap-2">
-                  <button onClick={() => mark(it.id, "consumed")} className="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700">✓ 吃掉</button>
-                  <button onClick={() => mark(it.id, "discarded")} className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700">🗑 丟掉</button>
                 </div>
               </div>
             </li>
