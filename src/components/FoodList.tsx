@@ -114,10 +114,11 @@ export function FoodList({ leadDays }: { leadDays: number }) {
                   <span className="truncate font-semibold text-[#3c4650]">{it.name}</span>
                   <StatusPill state={state} />
                 </div>
+                <div className="text-xs font-medium text-[#3c4650]">
+                  {exp ? `到期 ${exp.getMonth() + 1}/${exp.getDate()}` : "無到期日"}
+                </div>
                 <div className="truncate text-xs text-[#8a8178]">
-                  {it.category}
-                  {it.locationName ? ` · ${it.locationName}` : ""}
-                  {exp ? ` · 到期 ${exp.toLocaleDateString("zh-TW")}` : ""}
+                  {it.category}{it.locationName ? ` · ${it.locationName}` : ""}
                 </div>
                 {it.createdByName && (
                   <div className="flex items-center gap-1.5 text-xs text-[#8a8178]">
