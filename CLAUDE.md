@@ -3,6 +3,7 @@
 ## Zeabur 部署
 
 > 對外名稱是「**食物存放清單**」（食物過期管理）——UI 文案/PWA 名稱都用這個，別再叫「冰箱」。
+> **UI 遵循 `~/Desktop/Claude/portal-app/docs/UI規範.md`**（租寓品牌色＝租寓綠 `#5FBE91`＋灰 `#3C4650`＋黃 `#FFE450`／藍 `#2D8FD2`，無金色/無襯線；手機六檢、每頁返回鍵、載入失敗 retry 三態）。**例外：本 App 背景用奶油白 `#FBF7F0`（使用者指定保留），非規範的純白。** 到期狀態標籤：已過期/今明到期/接近到期/**安全**(原「充足」)/無到期日。新增食物的到期日由 AI 依類別保存期估算先帶出、可編輯。
 
 - Project：`food-expiration-tracker`（ID `6a2d5c6cd131a64afc9f3e03`）
 - 對外網址：https://food-expiration-tracker.zeabur.app
