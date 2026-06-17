@@ -9,7 +9,7 @@ export function AppHeader({ title, subtitle, actions }: { title: string; subtitl
     >
       <div className="mx-auto flex max-w-md items-center justify-between">
         <div>
-          <h1 className="text-lg font-bold text-[#2d2a26]">{title}</h1>
+          <h1 className="text-lg font-bold text-[#3c4650]">{title}</h1>
           {subtitle && <p className="text-xs text-[#8a8178]">{subtitle}</p>}
         </div>
         {actions && <div className="flex items-center gap-3 text-sm">{actions}</div>}

@@ -111,7 +111,7 @@ export function FoodList({ leadDays }: { leadDays: number }) {
               )}
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="truncate font-semibold text-[#2d2a26]">{it.name}</span>
+                  <span className="truncate font-semibold text-[#3c4650]">{it.name}</span>
                   <StatusPill state={state} />
                 </div>
                 <div className="truncate text-xs text-[#8a8178]">

@@ -1,12 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #fbf7f0;       /* 奶油白背景 */
+  --bg: #fbf7f0;        /* 奶油白背景（使用者保留） */
   --card: #ffffff;
-  --brand: #5fbe91;    /* 租寓綠 */
+  --brand: #5fbe91;     /* 租寓綠 */
   --brand-ink: #3e9e73;
-  --ink: #2d2a26;      /* 主文字 */
-  --muted: #8a8178;    /* 次要文字 */
+  --ink: #3c4650;       /* 租寓灰（主文字） */
+  --muted: #8a8178;     /* 次要文字 */
+  --accent-yellow: #ffe450; /* 租寓黃 */
+  --accent-blue: #2d8fd2;   /* 租寓藍 */
 }
 
 @theme inline {

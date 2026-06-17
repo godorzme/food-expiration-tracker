@@ -90,7 +90,7 @@ export function AdminUsers() {
   return (
     <div className="flex flex-col gap-4">
       <form onSubmit={add} className="flex flex-col gap-2 rounded-2xl bg-white p-4 shadow-sm">
-        <h2 className="font-semibold text-[#2d2a26]">新增使用者</h2>
+        <h2 className="font-semibold text-[#3c4650]">新增使用者</h2>
         <input type="text" placeholder="名字（例：媽）" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} required />
         <input type="tel" inputMode="tel" placeholder="電話（例：0912-345-678）" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputCls} required />
         <button type="submit" disabled={adding} className="rounded-xl bg-[#5fbe91] py-3 font-semibold text-white active:bg-[#3e9e73] disabled:opacity-50">{adding ? "新增中…" : "新增"}</button>
@@ -119,7 +119,7 @@ export function AdminUsers() {
                   <div className="flex min-w-0 items-center gap-3">
                     <Avatar src={u.avatarUrl} name={u.name} size={36} />
                     <div className="min-w-0">
-                    <div className="flex items-center gap-2 font-semibold text-[#2d2a26]">
+                    <div className="flex items-center gap-2 font-semibold text-[#3c4650]">
                       <span className="truncate">{u.name}</span>
                       {u.isAdmin && <span className="flex-shrink-0 rounded-full bg-[#5fbe91]/15 px-2 py-0.5 text-xs text-[#3e9e73]">管理員</span>}
                     </div>

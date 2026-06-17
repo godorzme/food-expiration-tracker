@@ -31,7 +31,7 @@ export function MyProfile({ name, phone, initialAvatar }: { name: string; phone:
     <div className="flex flex-col items-center gap-4 rounded-2xl bg-white p-6 shadow-sm">
       <Avatar src={avatar} name={name} size={96} />
       <div className="text-center">
-        <div className="text-lg font-bold text-[#2d2a26]">{name}</div>
+        <div className="text-lg font-bold text-[#3c4650]">{name}</div>
         {phone && <div className="text-sm text-[#8a8178]">{phone}</div>}
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}

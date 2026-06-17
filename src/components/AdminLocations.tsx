@@ -99,7 +99,7 @@ export function AdminLocations() {
   return (
     <div className="flex flex-col gap-4">
       <form onSubmit={add} className="flex flex-col gap-2 rounded-2xl bg-white p-4 shadow-sm">
-        <h2 className="font-semibold text-[#2d2a26]">新增存放點</h2>
+        <h2 className="font-semibold text-[#3c4650]">新增存放點</h2>
         <input type="text" placeholder="名稱（例：冷凍庫）" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} required />
         <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#5fbe91]/50 py-4 text-sm font-medium text-[#3e9e73]">
           {uploading ? "上傳中…" : photoId ? "✓ 已附位置照（可重選）" : "📷 拍位置照（可選）"}
@@ -133,7 +133,7 @@ export function AdminLocations() {
                 ) : (
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="truncate font-semibold text-[#2d2a26]">{l.name}</div>
+                      <div className="truncate font-semibold text-[#3c4650]">{l.name}</div>
                       <div className="text-xs text-[#8a8178]">{l.itemCount} 樣食物</div>
                     </div>
                     <div className="flex flex-shrink-0 gap-2">
