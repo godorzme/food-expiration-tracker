@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { putPhoto } from "@/lib/storage";
 import { resolveCapturedAt } from "@/lib/exif";
 import { recognizeFood } from "@/lib/aiVision";
+import { loadShelfLife } from "@/lib/shelfLife";
+import { estimateExpiry } from "@/lib/expiry";
 
 /** Replace characters outside [A-Za-z0-9._-] with underscores to keep R2 keys safe. */
 function sanitizeFilename(name: string): string {
@@ -30,5 +32,10 @@ export async function POST(req: NextRequest) {
     data: { objectKey: key, capturedAt, uploadedBy: user.id },
   });
   const recognized = await recognizeFood(bytes, file.type || "image/jpeg");
-  return Response.json({ photoId: photo.id, capturedAt: capturedAt.toISOString(), recognized });
+  const shelf = await loadShelfLife();
+  const recognizedWithExpiry = recognized.map((r) => ({
+    ...r,
+    expiresAt: estimateExpiry(r.category, capturedAt, shelf)?.toISOString() ?? null,
+  }));
+  return Response.json({ photoId: photo.id, capturedAt: capturedAt.toISOString(), recognized: recognizedWithExpiry });
 }
