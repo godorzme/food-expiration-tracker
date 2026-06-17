@@ -7,7 +7,7 @@ describe("statusMeta", () => {
     expect(statusMeta("expired").label).toBe("已過期");
     expect(statusMeta("urgent").label).toBe("今明到期");
     expect(statusMeta("soon").label).toBe("接近到期");
-    expect(statusMeta("ok").label).toBe("充足");
+    expect(statusMeta("ok").label).toBe("安全");
     expect(statusMeta("none").label).toBe("無到期日");
   });
   it("every state has a non-empty edge color", () => {
