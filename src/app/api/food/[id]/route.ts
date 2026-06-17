@@ -19,11 +19,21 @@ export async function PATCH(
 
   if ("status" in body && !VALID_STATUSES.has(body.status))
     return Response.json({ error: "invalid status" }, { status: 400 });
+  if ("name" in body && (typeof body.name !== "string" || !body.name.trim()))
+    return Response.json({ error: "請填名稱" }, { status: 400 });
 
   const data: Record<string, unknown> = {};
   for (const f of ["name", "category", "notes", "status"]) if (f in body) data[f] = body[f];
   if ("storedAt" in body) data.storedAt = new Date(body.storedAt);
   if ("expiresAt" in body) data.expiresAt = body.expiresAt ? new Date(body.expiresAt) : null;
+  if ("locationId" in body) {
+    if (body.locationId != null) {
+      const loc = await db.location.findUnique({ where: { id: body.locationId } });
+      if (!loc || loc.householdId !== user.householdId)
+        return Response.json({ error: "存放點不存在" }, { status: 400 });
+    }
+    data.locationId = body.locationId ?? null;
+  }
 
   const updated = await db.foodItem.update({ where: { id }, data });
   return Response.json({ updated });

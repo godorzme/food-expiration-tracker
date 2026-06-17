@@ -6,6 +6,7 @@ import { StatusLegend } from "@/components/ui/StatusLegend";
 import { PhotoLightbox } from "@/components/PhotoLightbox";
 import { LocationChips } from "@/components/ui/LocationChips";
 import { Avatar } from "@/components/ui/Avatar";
+import { EditFoodSheet } from "@/components/EditFoodSheet";
 
 interface FoodItemDTO {
   id: string;
@@ -31,6 +32,7 @@ export function FoodList({ leadDays }: { leadDays: number }) {
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState<"expiry" | "stored" | "name">("expiry");
   const [creator, setCreator] = useState<string | null>(null);
+  const [editing, setEditing] = useState<FoodItemDTO | null>(null);
 
   async function load() {
     setError(false);
@@ -153,12 +155,13 @@ export function FoodList({ leadDays }: { leadDays: number }) {
               ) : (
                 <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-xl bg-black/5 text-2xl">🍽️</div>
               )}
-              <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <div className="flex min-w-0 flex-1 cursor-pointer flex-col gap-1" onClick={() => setEditing(it)}>
                 {/* Line 1: name + expiry (right) */}
                 <div className="flex items-baseline justify-between gap-2">
                   <span className="truncate font-semibold text-[#3c4650]">{it.name}</span>
-                  <span className="flex-shrink-0 whitespace-nowrap text-xs font-medium text-[#3c4650]">
+                  <span className="flex flex-shrink-0 items-center gap-1 whitespace-nowrap text-xs font-medium text-[#3c4650]">
                     {exp ? `到期 ${exp.getMonth() + 1}/${exp.getDate()}` : "無到期日"}
+                    <span className="text-[#8a8178]">✏️</span>
                   </span>
                 </div>
                 {/* Line 2: category · location */}
@@ -176,8 +179,8 @@ export function FoodList({ leadDays }: { leadDays: number }) {
                     <span />
                   )}
                   <div className="flex flex-shrink-0 gap-2">
-                    <button onClick={() => mark(it.id, "consumed")} className="rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-green-700 shadow-sm">✓ 吃掉</button>
-                    <button onClick={() => mark(it.id, "discarded")} className="rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-red-700 shadow-sm">🗑 丟掉</button>
+                    <button onClick={(e) => { e.stopPropagation(); mark(it.id, "consumed"); }} className="rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-green-700 shadow-sm">✓ 吃掉</button>
+                    <button onClick={(e) => { e.stopPropagation(); mark(it.id, "discarded"); }} className="rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-red-700 shadow-sm">🗑 丟掉</button>
                   </div>
                 </div>
               </div>
@@ -186,6 +189,14 @@ export function FoodList({ leadDays }: { leadDays: number }) {
         })}
       </ul>
       {lightbox && <PhotoLightbox src={lightbox.src} alt={lightbox.alt} onClose={() => setLightbox(null)} />}
+      {editing && (
+        <EditFoodSheet
+          item={editing}
+          locations={locations}
+          onClose={() => setEditing(null)}
+          onSaved={load}
+        />
+      )}
     </>
   );
 }
