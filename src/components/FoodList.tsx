@@ -28,6 +28,9 @@ export function FoodList({ leadDays }: { leadDays: number }) {
   const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null);
   const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
   const [selectedLoc, setSelectedLoc] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"expiry" | "stored" | "name">("expiry");
+  const [creator, setCreator] = useState<string | null>(null);
 
   async function load() {
     setError(false);
@@ -78,10 +81,44 @@ export function FoodList({ leadDays }: { leadDays: number }) {
       </div>
     );
 
-  const shown = selectedLoc ? items.filter((it) => it.locationId === selectedLoc) : items;
+  const creators = Array.from(new Set(items.map((i) => i.createdByName).filter(Boolean))) as string[];
+  const q = query.trim().toLowerCase();
+  const shown = items
+    .filter((it) => (selectedLoc ? it.locationId === selectedLoc : true))
+    .filter((it) => (creator ? it.createdByName === creator : true))
+    .filter((it) => (q ? it.name.toLowerCase().includes(q) : true))
+    .sort((a, b) => {
+      if (sortBy === "name") return a.name.localeCompare(b.name, "zh-Hant");
+      if (sortBy === "stored") return new Date(b.storedAt).getTime() - new Date(a.storedAt).getTime();
+      const ax = a.expiresAt ? new Date(a.expiresAt).getTime() : Infinity;
+      const bx = b.expiresAt ? new Date(b.expiresAt).getTime() : Infinity;
+      return ax - bx;
+    });
+
+  const ctrlCls = "w-full rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm text-[#3c4650] outline-none focus:border-[#5fbe91]";
 
   return (
     <>
+      <div className="relative mb-2">
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#8a8178]">🔍</span>
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="搜尋食物名稱"
+          className="w-full rounded-xl border border-black/10 bg-white py-2.5 pl-9 pr-3 text-sm text-[#3c4650] outline-none focus:border-[#5fbe91]"
+        />
+      </div>
+      <div className="mb-2 grid grid-cols-2 gap-2">
+        <select value={sortBy} onChange={(e) => setSortBy(e.target.value as "expiry" | "stored" | "name")} className={ctrlCls}>
+          <option value="expiry">排序：到期日</option>
+          <option value="stored">排序：最新加入</option>
+          <option value="name">排序：名稱</option>
+        </select>
+        <select value={creator ?? ""} onChange={(e) => setCreator(e.target.value || null)} className={ctrlCls}>
+          <option value="">誰加的：全部</option>
+          {creators.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+      </div>
       <div className="mb-3">
         <StatusLegend />
       </div>
@@ -89,6 +126,9 @@ export function FoodList({ leadDays }: { leadDays: number }) {
         <div className="mb-3">
           <LocationChips locations={locations} selected={selectedLoc} onSelect={setSelectedLoc} />
         </div>
+      )}
+      {shown.length === 0 && (
+        <p className="py-8 text-center text-sm text-[#8a8178]">找不到符合的食物。</p>
       )}
       <ul className="flex flex-col gap-3">
         {shown.map((it) => {
