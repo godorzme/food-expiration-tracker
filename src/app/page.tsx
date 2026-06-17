@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
 import { db } from "@/lib/db";
 import { FoodList } from "@/components/FoodList";
-import { EnablePush } from "@/components/EnablePush";
+import { PushPrompt } from "@/components/PushPrompt";
 import { LogoutButton } from "@/components/LogoutButton";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Avatar } from "@/components/ui/Avatar";
@@ -28,7 +28,7 @@ export default async function Home() {
           </>
         }
       />
-      <EnablePush vapidPublicKey={process.env.VAPID_PUBLIC_KEY ?? ""} />
+      <PushPrompt vapidPublicKey={process.env.VAPID_PUBLIC_KEY ?? ""} />
       <div className="pb-28">
         <FoodList leadDays={hh?.reminderLeadDays ?? 2} />
       </div>
