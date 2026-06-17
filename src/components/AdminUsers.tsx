@@ -96,7 +96,12 @@ export function AdminUsers() {
         <button type="submit" disabled={adding} className="rounded-xl bg-[#5fbe91] py-3 font-semibold text-white active:bg-[#3e9e73] disabled:opacity-50">{adding ? "新增中…" : "新增"}</button>
       </form>
 
-      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
+      {error && (
+        <div className="flex items-center justify-between gap-3 rounded-lg bg-red-50 px-3 py-2">
+          <span className="text-sm text-red-600">{error}</span>
+          <button onClick={() => { setLoading(true); load(); }} className="flex-shrink-0 rounded-lg bg-[#5fbe91] px-3 py-1.5 text-sm font-semibold text-white">重新整理</button>
+        </div>
+      )}
 
       {loading ? (
         <p className="py-6 text-center text-sm text-[#8a8178]">載入中…</p>

@@ -108,7 +108,12 @@ export function AdminLocations() {
         <button type="submit" disabled={adding || uploading} className="rounded-xl bg-[#5fbe91] py-3 font-semibold text-white active:bg-[#3e9e73] disabled:opacity-50">{adding ? "新增中…" : "新增存放點"}</button>
       </form>
 
-      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
+      {error && (
+        <div className="flex items-center justify-between gap-3 rounded-lg bg-red-50 px-3 py-2">
+          <span className="text-sm text-red-600">{error}</span>
+          <button onClick={() => { setLoading(true); load(); }} className="flex-shrink-0 rounded-lg bg-[#5fbe91] px-3 py-1.5 text-sm font-semibold text-white">重新整理</button>
+        </div>
+      )}
 
       {loading ? (
         <p className="py-6 text-center text-sm text-[#8a8178]">載入中…</p>
@@ -136,7 +141,7 @@ export function AdminLocations() {
                       <div className="truncate font-semibold text-[#3c4650]">{l.name}</div>
                       <div className="text-xs text-[#8a8178]">{l.itemCount} 樣食物</div>
                     </div>
-                    <div className="flex flex-shrink-0 gap-2">
+                    <div className="flex flex-shrink-0 flex-wrap justify-end gap-2">
                       <label className="cursor-pointer rounded-lg bg-[#5fbe91]/10 px-3 py-2 text-sm font-medium text-[#3e9e73]">
                         換照
                         <input type="file" accept="image/*" capture="environment" className="hidden" onChange={async (e) => { const id = await uploadPhoto(e); if (id) await saveEdit(l.id, id); }} />
