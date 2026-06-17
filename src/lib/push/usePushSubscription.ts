@@ -5,7 +5,7 @@ export function urlBase64ToUint8Array(base64: string): Uint8Array {
   const padding = "=".repeat((4 - (base64.length % 4)) % 4);
   const b64 = (base64 + padding).replace(/-/g, "+").replace(/_/g, "/");
   const raw = atob(b64);
-  return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+  return new Uint8Array([...raw].map((c) => c.charCodeAt(0)));
 }
 
 export interface PushState {
@@ -51,7 +51,7 @@ export function usePushSubscription(vapidPublicKey: string): PushState {
       if (perm !== "granted") { setError("未授權通知"); return false; }
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey).buffer as ArrayBuffer,
       });
       const res = await fetch("/api/push/subscribe", {
         method: "POST",
