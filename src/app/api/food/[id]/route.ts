@@ -34,6 +34,7 @@ export async function PATCH(
     }
     data.locationId = body.locationId ?? null;
   }
+  if ("photoId" in body) data.photoId = body.photoId || null;
 
   const updated = await db.foodItem.update({ where: { id }, data });
   return Response.json({ updated });

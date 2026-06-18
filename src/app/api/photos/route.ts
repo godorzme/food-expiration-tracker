@@ -5,7 +5,7 @@ import { putPhoto } from "@/lib/storage";
 import { resolveCapturedAt } from "@/lib/exif";
 import { recognizeFood } from "@/lib/aiVision";
 import { loadShelfLife } from "@/lib/shelfLife";
-import { estimateExpiry } from "@/lib/expiry";
+import { estimateDaysFromName } from "@/lib/expiryAI";
 
 /** Replace characters outside [A-Za-z0-9._-] with underscores to keep R2 keys safe. */
 function sanitizeFilename(name: string): string {
@@ -32,10 +32,15 @@ export async function POST(req: NextRequest) {
     data: { objectKey: key, capturedAt, uploadedBy: user.id },
   });
   const recognized = await recognizeFood(bytes, file.type || "image/jpeg");
-  const shelf = await loadShelfLife();
-  const recognizedWithExpiry = recognized.map((r) => ({
-    ...r,
-    expiresAt: estimateExpiry(r.category, capturedAt, shelf)?.toISOString() ?? null,
-  }));
-  return Response.json({ photoId: photo.id, capturedAt: capturedAt.toISOString(), recognized: recognizedWithExpiry });
+  const top = recognized[0] ?? null;
+  let item: { name: string; category: string; days: number | null } | null = null;
+  if (top) {
+    let days = await estimateDaysFromName(top.name);
+    if (days == null) {
+      const shelf = await loadShelfLife();
+      days = shelf[top.category] ?? null;
+    }
+    item = { name: top.name, category: top.category, days };
+  }
+  return Response.json({ photoId: photo.id, capturedAt: capturedAt.toISOString(), item });
 }

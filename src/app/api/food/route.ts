@@ -25,6 +25,7 @@ export async function GET() {
     storedAt: it.storedAt,
     expiresAt: it.expiresAt,
     photoUrl: it.photoId ? `/api/photo/${it.photoId}` : null,
+    photoId: it.photoId,
     createdByName: creatorNameFor(it.createdBy, nameMap),
     createdByAvatar: avatarMap[it.createdBy] ?? null,
     locationId: it.locationId,
