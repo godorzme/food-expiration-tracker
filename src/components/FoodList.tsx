@@ -15,6 +15,7 @@ interface FoodItemDTO {
   storedAt: string;
   expiresAt: string | null;
   photoUrl?: string | null;
+  photoId?: string | null;
   createdByName?: string | null;
   createdByAvatar?: string | null;
   locationId?: string | null;
