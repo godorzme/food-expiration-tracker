@@ -13,13 +13,35 @@ export function parseDays(raw: string): number | null {
   }
 }
 
-// Ask the text model how many days an item keeps in a typical home fridge.
-// Returns null when AI Hub isn't configured or the call fails (caller falls back).
-export async function estimateDaysFromName(name: string): Promise<number | null> {
+export interface Estimate {
+  days: number | null;
+  storage: string | null; // short recommended storage method, e.g. "室溫陰涼乾燥處"
+}
+
+// Parse the model reply into days + recommended storage method.
+export function parseEstimate(raw: string): Estimate {
+  const days = parseDays(raw);
+  let storage: string | null = null;
+  try {
+    const m = raw.match(/\{[\s\S]*\}/);
+    const obj = JSON.parse(m ? m[0] : raw) as { storage?: unknown };
+    if (typeof obj.storage === "string" && obj.storage.trim()) {
+      storage = obj.storage.trim().slice(0, 20);
+    }
+  } catch {
+    // leave storage null
+  }
+  return { days, storage };
+}
+
+// Ask the text model to first judge the best home storage method for the item,
+// then give the days it keeps under that method. Returns {days:null} when AI Hub
+// isn't configured or the call fails (caller falls back to the category table).
+export async function estimateDaysFromName(name: string): Promise<Estimate> {
   const base = process.env.AI_HUB_BASE_URL;
   const key = process.env.AI_HUB_API_KEY;
   const model = process.env.AI_HUB_VISION_MODEL;
-  if (!base || !key || !model || !name.trim()) return null;
+  if (!base || !key || !model || !name.trim()) return { days: null, storage: null };
   try {
     const res = await fetch(`${base.replace(/\/$/, "")}/chat/completions`, {
       method: "POST",
@@ -28,18 +50,18 @@ export async function estimateDaysFromName(name: string): Promise<number | null>
         model,
         messages: [{
           role: "user",
-          content: `你是食物保存期限助手。使用者給一個食物品項名稱,回答它在一般家庭冰箱冷藏下大約可以放幾天(整數天,常見估計即可)。只回 JSON,格式 {"days": 整數}。品項：「${name.trim()}」`,
+          content: `你是食物保存期限助手。使用者給一個食物品項名稱,請先判斷這項食物「最適合、最常見的家庭保存方式」(例如冷藏、冷凍、室溫陰涼乾燥處等),再依照該保存方式回答它大約可以放幾天(整數天,常見估計即可)。只回 JSON,格式 {"days": 整數, "storage": "保存方式(20字內)"}。品項：「${name.trim()}」`,
         }],
         temperature: 0,
-        max_tokens: 50,
+        max_tokens: 60,
       }),
       signal: AbortSignal.timeout(15000),
     });
-    if (!res.ok) return null;
+    if (!res.ok) return { days: null, storage: null };
     const json = (await res.json()) as { choices?: Array<{ message?: { content?: unknown } }> };
     const content = typeof json?.choices?.[0]?.message?.content === "string" ? json.choices[0].message.content : "";
-    return parseDays(content);
+    return parseEstimate(content);
   } catch {
-    return null;
+    return { days: null, storage: null };
   }
 }

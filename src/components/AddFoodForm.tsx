@@ -13,14 +13,15 @@ interface Row {
   name: string;
   category: string;
   days: number | null;
+  storage: string | null;
   expiresAt: string;
   expiryEdited: boolean;
   fromAI: boolean;
 }
 
-const blankRow = (): Row => ({ id: crypto.randomUUID(), photoId: null, photoUrl: null, name: "", category: "其他", days: null, expiresAt: "", expiryEdited: false, fromAI: false });
+const blankRow = (): Row => ({ id: crypto.randomUUID(), photoId: null, photoUrl: null, name: "", category: "其他", days: null, storage: null, expiresAt: "", expiryEdited: false, fromAI: false });
 
-interface PhotoResponse { photoId: string; capturedAt: string; item: { name: string; category: string; days: number | null } | null }
+interface PhotoResponse { photoId: string; capturedAt: string; item: { name: string; category: string; days: number | null; storage: string | null } | null }
 
 const inputCls = "w-full rounded-xl border border-black/10 bg-white px-3 py-3 text-base text-[#3c4650] outline-none focus:border-[#5fbe91]";
 
@@ -75,6 +76,7 @@ export function AddFoodForm() {
           name: it?.name ?? "",
           category: it?.category ?? "其他",
           days: it?.days ?? null,
+          storage: it?.storage ?? null,
           expiresAt: expiryFor(it?.days ?? null, stored),
           expiryEdited: false,
           fromAI: !!it,
@@ -154,6 +156,9 @@ export function AddFoodForm() {
               </select>
               <label className="text-xs text-[#8a8178]">到期日（AI 估算，可改）</label>
               <input className={inputCls} type="date" value={r.expiresAt} onChange={(e) => update(r.id, { expiresAt: e.target.value, expiryEdited: true })} />
+              {r.storage && (
+                <p className="text-xs text-[#3e9e73]">💡 建議保存：{r.storage}（到期日依此估算）</p>
+              )}
               <button className="self-end text-sm text-red-600" onClick={() => removeRow(r.id)}>刪除這筆</button>
             </div>
           ))}

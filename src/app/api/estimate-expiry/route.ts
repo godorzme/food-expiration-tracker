@@ -8,6 +8,6 @@ export async function POST(req: NextRequest) {
   if (!user) return Response.json({ error: "unauthorized" }, { status: 401 });
   const body = await req.json().catch(() => ({}));
   const name = typeof body?.name === "string" ? body.name : "";
-  const days = await estimateDaysFromName(name);
-  return Response.json({ days });
+  const { days, storage } = await estimateDaysFromName(name);
+  return Response.json({ days, storage });
 }

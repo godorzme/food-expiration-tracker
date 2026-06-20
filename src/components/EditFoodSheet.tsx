@@ -38,6 +38,7 @@ export function EditFoodSheet({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [suggestion, setSuggestion] = useState<string | null>(null);
+  const [suggestStorage, setSuggestStorage] = useState<string | null>(null);
 
   // Changing the stored time shifts the expiry by the same span it currently has.
   function changeStoredAt(v: string) {
@@ -54,16 +55,17 @@ export function EditFoodSheet({
   // Editing the name re-judges expiry via the text AI; show a suggestion to confirm.
   useEffect(() => {
     const n = name.trim();
-    if (!n || n === origName) { setSuggestion(null); return; }
+    if (!n || n === origName) { setSuggestion(null); setSuggestStorage(null); return; }
     const t = setTimeout(async () => {
       try {
         const res = await fetch("/api/estimate-expiry", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: n }) });
         if (!res.ok) return;
-        const { days } = await res.json();
-        if (days == null) { setSuggestion(null); return; }
+        const { days, storage } = await res.json();
+        if (days == null) { setSuggestion(null); setSuggestStorage(null); return; }
         const base = storedAt ? new Date(storedAt) : new Date();
         if (Number.isNaN(base.getTime())) return;
         setSuggestion(addDays(base, days).toISOString().slice(0, 10));
+        setSuggestStorage(typeof storage === "string" ? storage : null);
       } catch {}
     }, 700);
     return () => clearTimeout(t);
@@ -151,9 +153,12 @@ export function EditFoodSheet({
             <label className="text-xs text-[#8a8178]">到期日</label>
             <input className={inputCls} type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} />
             {suggestion && suggestion !== expiresAt && (
-              <button onClick={() => { setExpiresAt(suggestion); setSuggestion(null); }} className="self-start rounded-lg bg-[#5fbe91]/10 px-3 py-1.5 text-xs font-medium text-[#3e9e73]">
-                🤖 依「{name.trim()}」建議到期日 {fmt(suggestion)}，套用
-              </button>
+              <div className="flex flex-col gap-1">
+                <button onClick={() => { setExpiresAt(suggestion); setSuggestion(null); }} className="self-start rounded-lg bg-[#5fbe91]/10 px-3 py-1.5 text-xs font-medium text-[#3e9e73]">
+                  🤖 依「{name.trim()}」建議到期日 {fmt(suggestion)}，套用
+                </button>
+                {suggestStorage && <span className="text-xs text-[#8a8178]">💡 建議保存：{suggestStorage}</span>}
+              </div>
             )}
           </div>
           <div className="flex flex-col gap-1">

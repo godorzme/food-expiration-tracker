@@ -33,14 +33,15 @@ export async function POST(req: NextRequest) {
   });
   const recognized = await recognizeFood(bytes, file.type || "image/jpeg");
   const top = recognized[0] ?? null;
-  let item: { name: string; category: string; days: number | null } | null = null;
+  let item: { name: string; category: string; days: number | null; storage: string | null } | null = null;
   if (top) {
-    let days = await estimateDaysFromName(top.name);
+    const est = await estimateDaysFromName(top.name);
+    let days = est.days;
     if (days == null) {
       const shelf = await loadShelfLife();
       days = shelf[top.category] ?? null;
     }
-    item = { name: top.name, category: top.category, days };
+    item = { name: top.name, category: top.category, days, storage: est.storage };
   }
   return Response.json({ photoId: photo.id, capturedAt: capturedAt.toISOString(), item });
 }
