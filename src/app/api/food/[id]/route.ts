@@ -23,7 +23,7 @@ export async function PATCH(
     return Response.json({ error: "請填名稱" }, { status: 400 });
 
   const data: Record<string, unknown> = {};
-  for (const f of ["name", "category", "notes", "status"]) if (f in body) data[f] = body[f];
+  for (const f of ["name", "category", "storage", "notes", "status"]) if (f in body) data[f] = body[f];
   if ("storedAt" in body) data.storedAt = new Date(body.storedAt);
   if ("expiresAt" in body) data.expiresAt = body.expiresAt ? new Date(body.expiresAt) : null;
   if ("locationId" in body) {

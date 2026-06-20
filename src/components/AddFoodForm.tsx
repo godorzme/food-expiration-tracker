@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CATEGORIES } from "@/lib/recognition";
 import { LocationChips } from "@/components/ui/LocationChips";
+import { StorageMethodPicker } from "@/components/ui/StorageMethodPicker";
 import { defaultLocationId } from "@/lib/locations";
 import { addDays } from "@/lib/expiry";
 
@@ -19,7 +20,7 @@ interface Row {
   fromAI: boolean;
 }
 
-const blankRow = (): Row => ({ id: crypto.randomUUID(), photoId: null, photoUrl: null, name: "", category: "其他", days: null, storage: null, expiresAt: "", expiryEdited: false, fromAI: false });
+const blankRow = (): Row => ({ id: crypto.randomUUID(), photoId: null, photoUrl: null, name: "", category: "其他", days: null, storage: "冷藏", expiresAt: "", expiryEdited: false, fromAI: false });
 
 interface PhotoResponse { photoId: string; capturedAt: string; item: { name: string; category: string; days: number | null; storage: string | null } | null }
 
@@ -33,6 +34,7 @@ export function AddFoodForm() {
   const [progress, setProgress] = useState<string | null>(null);
   const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
   const [locationId, setLocationId] = useState<string | null>(null);
+  const [recalc, setRecalc] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     fetch("/api/locations")
@@ -76,7 +78,7 @@ export function AddFoodForm() {
           name: it?.name ?? "",
           category: it?.category ?? "其他",
           days: it?.days ?? null,
-          storage: it?.storage ?? null,
+          storage: it?.storage ?? "冷藏",
           expiresAt: expiryFor(it?.days ?? null, stored),
           expiryEdited: false,
           fromAI: !!it,
@@ -100,6 +102,29 @@ export function AddFoodForm() {
   function addManualRow() { setRows((rs) => [...rs, blankRow()]); }
   function removeRow(id: string) { setRows((rs) => rs.filter((r) => r.id !== id)); }
 
+  // Switching storage method re-asks the AI for the days under that method and
+  // recomputes the expiry (unless the user has manually edited the expiry).
+  async function changeStorage(id: string, method: string) {
+    const row = rows.find((r) => r.id === id);
+    update(id, { storage: method });
+    if (!row?.name.trim()) return;
+    setRecalc((m) => ({ ...m, [id]: true }));
+    try {
+      const res = await fetch("/api/estimate-expiry", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name: row.name.trim(), method }),
+      });
+      if (res.ok) {
+        const { days } = await res.json();
+        if (days != null) update(id, { days, expiresAt: expiryFor(days, storedAt), expiryEdited: false });
+      }
+    } catch {
+      // keep current expiry on failure
+    } finally {
+      setRecalc((m) => ({ ...m, [id]: false }));
+    }
+  }
+
   async function save() {
     setBusy(true);
     const stored = storedAt ? new Date(storedAt).toISOString() : new Date().toISOString();
@@ -107,7 +132,7 @@ export function AddFoodForm() {
       const res = await fetch("/api/food", {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({ items: rows.filter((r) => r.name.trim()).map((r) => ({
-          name: r.name, category: r.category, photoId: r.photoId, locationId, storedAt: stored,
+          name: r.name, category: r.category, storage: r.storage, photoId: r.photoId, locationId, storedAt: stored,
           expiresAt: r.expiresAt ? new Date(r.expiresAt).toISOString() : null, isRecognized: r.fromAI,
         })) }),
       });
@@ -154,11 +179,11 @@ export function AddFoodForm() {
               <select className={inputCls} value={r.category} onChange={(e) => changeCategory(r.id, e.target.value)}>
                 {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
               </select>
+              <label className="text-xs text-[#8a8178]">保存方式（AI 建議，可改；改了會重算到期日）</label>
+              <StorageMethodPicker value={r.storage} onChange={(m) => changeStorage(r.id, m)} busy={recalc[r.id]} />
               <label className="text-xs text-[#8a8178]">到期日（AI 估算，可改）</label>
               <input className={inputCls} type="date" value={r.expiresAt} onChange={(e) => update(r.id, { expiresAt: e.target.value, expiryEdited: true })} />
-              {r.storage && (
-                <p className="text-xs text-[#3e9e73]">💡 建議保存：{r.storage}（到期日依此估算）</p>
-              )}
+              {recalc[r.id] && <p className="text-xs text-[#8a8178]">依保存方式重算到期日中…</p>}
               <button className="self-end text-sm text-red-600" onClick={() => removeRow(r.id)}>刪除這筆</button>
             </div>
           ))}

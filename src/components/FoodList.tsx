@@ -12,6 +12,7 @@ interface FoodItemDTO {
   id: string;
   name: string;
   category: string;
+  storage?: string | null;
   storedAt: string;
   expiresAt: string | null;
   photoUrl?: string | null;
@@ -165,9 +166,9 @@ export function FoodList({ leadDays }: { leadDays: number }) {
                     <span className="text-[#8a8178]">✏️</span>
                   </span>
                 </div>
-                {/* Line 2: category · location */}
+                {/* Line 2: category · location · storage */}
                 <div className="truncate text-xs text-[#8a8178]">
-                  {it.category}{it.locationName ? ` · ${it.locationName}` : ""}
+                  {it.category}{it.locationName ? ` · ${it.locationName}` : ""}{it.storage ? ` · ${it.storage}` : ""}
                 </div>
                 {/* Line 3: creator (left) + actions (right) */}
                 <div className="flex items-center justify-between gap-2">

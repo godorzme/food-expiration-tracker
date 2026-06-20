@@ -2,12 +2,14 @@
 import { useEffect, useState } from "react";
 import { CATEGORIES } from "@/lib/recognition";
 import { LocationChips } from "@/components/ui/LocationChips";
+import { StorageMethodPicker } from "@/components/ui/StorageMethodPicker";
 import { addDays } from "@/lib/expiry";
 
 interface Item {
   id: string;
   name: string;
   category: string;
+  storage?: string | null;
   storedAt: string;
   expiresAt: string | null;
   locationId?: string | null;
@@ -30,6 +32,8 @@ export function EditFoodSheet({
   const origName = item.name;
   const [name, setName] = useState(item.name);
   const [category, setCategory] = useState(item.category);
+  const [storage, setStorage] = useState<string | null>(item.storage ?? "冷藏");
+  const [recalc, setRecalc] = useState(false);
   const [locationId, setLocationId] = useState<string | null>(item.locationId ?? null);
   const [storedAt, setStoredAt] = useState(item.storedAt ? item.storedAt.slice(0, 16) : "");
   const [expiresAt, setExpiresAt] = useState(item.expiresAt ? item.expiresAt.slice(0, 10) : "");
@@ -50,6 +54,30 @@ export function EditFoodSheet({
       }
     }
     setStoredAt(v);
+  }
+
+  // Switching storage method re-asks the AI for the days under that method and
+  // recomputes the expiry directly (per the chosen "auto recompute" behaviour).
+  async function changeMethod(method: string) {
+    setStorage(method);
+    const n = name.trim();
+    if (!n) return;
+    setRecalc(true);
+    try {
+      const res = await fetch("/api/estimate-expiry", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name: n, method }),
+      });
+      if (res.ok) {
+        const { days } = await res.json();
+        const base = storedAt ? new Date(storedAt) : new Date();
+        if (days != null && !Number.isNaN(base.getTime())) setExpiresAt(addDays(base, days).toISOString().slice(0, 10));
+      }
+    } catch {
+      // keep current expiry on failure
+    } finally {
+      setRecalc(false);
+    }
   }
 
   // Editing the name re-judges expiry via the text AI; show a suggestion to confirm.
@@ -99,6 +127,7 @@ export function EditFoodSheet({
         body: JSON.stringify({
           name: name.trim(),
           category,
+          storage,
           locationId,
           photoId,
           storedAt: storedAt ? new Date(storedAt).toISOString() : item.storedAt,
@@ -143,6 +172,11 @@ export function EditFoodSheet({
               {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
             </select>
           </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-[#8a8178]">保存方式（改了會重算到期日）</label>
+            <StorageMethodPicker value={storage} onChange={changeMethod} busy={recalc} />
+            {recalc && <span className="text-xs text-[#8a8178]">依保存方式重算到期日中…</span>}
+          </div>
           {locations.length > 0 && (
             <div className="flex flex-col gap-1">
               <label className="text-xs text-[#8a8178]">存放點</label>
@@ -154,7 +188,7 @@ export function EditFoodSheet({
             <input className={inputCls} type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} />
             {suggestion && suggestion !== expiresAt && (
               <div className="flex flex-col gap-1">
-                <button onClick={() => { setExpiresAt(suggestion); setSuggestion(null); }} className="self-start rounded-lg bg-[#5fbe91]/10 px-3 py-1.5 text-xs font-medium text-[#3e9e73]">
+                <button onClick={() => { setExpiresAt(suggestion); if (suggestStorage) setStorage(suggestStorage); setSuggestion(null); }} className="self-start rounded-lg bg-[#5fbe91]/10 px-3 py-1.5 text-xs font-medium text-[#3e9e73]">
                   🤖 依「{name.trim()}」建議到期日 {fmt(suggestion)}，套用
                 </button>
                 {suggestStorage && <span className="text-xs text-[#8a8178]">💡 建議保存：{suggestStorage}</span>}

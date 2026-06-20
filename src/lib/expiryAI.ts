@@ -1,4 +1,6 @@
 // src/lib/expiryAI.ts
+import { normalizeStorage } from "./storageMethod";
+
 export function parseDays(raw: string): number | null {
   try {
     const m = raw.match(/\{[\s\S]*\}/);
@@ -34,24 +36,27 @@ export function parseEstimate(raw: string): Estimate {
   return { days, storage };
 }
 
-// Ask the text model to first judge the best home storage method for the item,
-// then give the days it keeps under that method. Returns {days:null} when AI Hub
-// isn't configured or the call fails (caller falls back to the category table).
-export async function estimateDaysFromName(name: string): Promise<Estimate> {
+// Estimate shelf life for an item. With no `method`, the model picks the best
+// home storage method (冷藏/冷凍/常溫) and returns its days. With a `method`,
+// it estimates days for THAT method (used when the user switches the picker).
+// Returns {days:null} when AI Hub isn't configured or the call fails.
+export async function estimateDaysFromName(name: string, method?: string | null): Promise<Estimate> {
   const base = process.env.AI_HUB_BASE_URL;
   const key = process.env.AI_HUB_API_KEY;
   const model = process.env.AI_HUB_VISION_MODEL;
   if (!base || !key || !model || !name.trim()) return { days: null, storage: null };
+  const n = name.trim();
+  const m = method?.trim();
+  const prompt = m
+    ? `你是食物保存期限助手。使用者會把「${n}」以「${m}」方式保存,請回答它在此保存方式下大約可以放幾天(整數天,常見估計即可)。只回 JSON,格式 {"days": 整數}。`
+    : `你是食物保存期限助手。使用者給一個食物品項名稱,請先判斷這項食物最適合、最常見的家庭保存方式(只能是「冷藏」「冷凍」「常溫」三者之一),再依該方式回答大約可以放幾天(整數天,常見估計即可)。只回 JSON,格式 {"days": 整數, "storage": "冷藏或冷凍或常溫"}。品項：「${n}」`;
   try {
     const res = await fetch(`${base.replace(/\/$/, "")}/chat/completions`, {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
       body: JSON.stringify({
         model,
-        messages: [{
-          role: "user",
-          content: `你是食物保存期限助手。使用者給一個食物品項名稱,請先判斷這項食物「最適合、最常見的家庭保存方式」(例如冷藏、冷凍、室溫陰涼乾燥處等),再依照該保存方式回答它大約可以放幾天(整數天,常見估計即可)。只回 JSON,格式 {"days": 整數, "storage": "保存方式(20字內)"}。品項：「${name.trim()}」`,
-        }],
+        messages: [{ role: "user", content: prompt }],
         temperature: 0,
         max_tokens: 60,
       }),
@@ -60,7 +65,10 @@ export async function estimateDaysFromName(name: string): Promise<Estimate> {
     if (!res.ok) return { days: null, storage: null };
     const json = (await res.json()) as { choices?: Array<{ message?: { content?: unknown } }> };
     const content = typeof json?.choices?.[0]?.message?.content === "string" ? json.choices[0].message.content : "";
-    return parseEstimate(content);
+    const parsed = parseEstimate(content);
+    // When a method was requested, echo it; otherwise normalize the model's pick.
+    const storage = normalizeStorage(m) ?? normalizeStorage(parsed.storage);
+    return { days: parsed.days, storage };
   } catch {
     return { days: null, storage: null };
   }

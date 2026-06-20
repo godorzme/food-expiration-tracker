@@ -67,6 +67,7 @@ model FoodItem {
   locationId   String?
   name         String
   category     String
+  storage      String?
   storedAt     DateTime
   expiresAt    DateTime?
   status       FoodStatus    @default(active)
